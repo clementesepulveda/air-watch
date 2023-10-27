@@ -1,5 +1,4 @@
 fastapi[all]
 google-cloud-storage
-google-cloud
 urllib3==1.26.6
 pandas
