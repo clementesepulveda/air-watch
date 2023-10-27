@@ -1,6 +1,9 @@
 # import packages
 from google.cloud import storage
+import locale
 import os
+
+locale.setlocale(locale.LC_TIME, 'es_CL.UTF-8')
 
 # set key credentials file path
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './private_key.json'
