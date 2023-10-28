@@ -89,7 +89,7 @@ def spanish_to_english_date(d):
         'septiembre':'september',
         'octubre':'october',
         'noviembre':'november',
-        'diciembre':'dicember'
+        'diciembre':'december'
     }
     
     d = d.replace(d.split(" ")[2], mapping_dict[d.split(" ")[2]])
