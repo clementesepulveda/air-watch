@@ -14,7 +14,7 @@ locale.setlocale(locale.LC_TIME, 'es_CL.utf8')
 
 app = FastAPI()
 
-APP_FOLDER = "./app"
+APP_FOLDER = "."
 
 app.add_middleware(
     CORSMiddleware,
