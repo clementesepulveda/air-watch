@@ -9,9 +9,6 @@ import json
 import glob
 from datetime import datetime
 
-import locale
-locale.setlocale(locale.LC_TIME, 'es_CL.utf8')
-
 app = FastAPI()
 
 APP_FOLDER = "."
