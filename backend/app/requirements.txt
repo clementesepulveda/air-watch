@@ -1,0 +1,5 @@
+fastapi[all]
+google-cloud-storage
+urllib3==1.26.6
+pandas
+lxml
