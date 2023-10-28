@@ -79,6 +79,27 @@ async def root():
 
     return {"message": "Hello World"}
 
+def spanish_to_english_date(d):
+    mapping_dict = {
+        'enero':'january',
+        'febrero':'february',
+        'marzo':'march',
+        'abril':'april',
+        'mayo':'may',
+        'junio':'june',
+        'julio':'july',
+        'agosto':'august',
+        'septiembre':'september',
+        'octubre':'october',
+        'noviembre':'november',
+        'diciembre':'dicember'
+    }
+    
+    d = d.replace(d.split(" ")[2], mapping_dict[d.split(" ")[2]])
+    d = d.replace("de ", "")
+    datetime_object = datetime.strptime(d, '%d %B %Y')
+    return datetime_object
+
 @app.get("/vuelos")
 def vuelos():
     # read flights
@@ -117,7 +138,8 @@ def vuelos():
         passengers_json = json.loads(f.read())['passengers']
         passengers = pd.DataFrame.from_dict(passengers_json)
         passengers['passengerID']=passengers['passengerID'].astype(int)
-        passengers['birthDate'] = pd.to_datetime(passengers['birthDate'], format='%d de %B de %Y')
+        passengers['birthDate'] = passengers['birthDate'].apply(lambda x: spanish_to_english_date(x))
+
         passengers['age'] = (datetime.now() - passengers['birthDate']).dt.days // 365.2425
 
     passengers = pd.merge(tickets,passengers, on="passengerID")
