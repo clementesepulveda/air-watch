@@ -49,6 +49,11 @@
 <h1>Vuelos</h1>
 
 <div id="table">
+    {#if loading}
+        <div class="spinner">
+            <SyncLoader color="#F8F8F8"/>
+        </div>
+    {:else}
     <table>
         <tr id="table-titles">
             <th>Flight Number <button on:click={()=>sort_by('flightNumber')}>s</button></th>
@@ -60,31 +65,23 @@
             <th>Nombre Avión <button on:click={()=>sort_by('aircraftName')}>s</th>
             <th>Cantidad Pasajeros <button on:click={()=>sort_by('passengersQty')}>s</th>
         </tr>
-    {#if loading}
-        <tr>
-            <td colspan="8" class="center-loader">
-                <div class="spinner">
-                    <SyncLoader color="#F8F8F8"/>
-                </div>
+
+        {#each vuelos.slice(page*pagination, (page+1)*pagination) as vuelo}
+        <tr class="table-item" on:click={()=>console.log(vuelo)}>
+            <td>
+                <a href={`/map/${vuelo.flightNumber}`}>{vuelo.flightNumber}</a>
             </td>
+            <td>{vuelo.origin}</td>
+            <td>{vuelo.destination}</td>
+            <td>{vuelo.airline}</td>
+            <td>{vuelo.averageAge.toFixed(2)} años</td>
+            <td></td>
+            <td>{vuelo.aircraftName}</td>
+            <td>{vuelo.passengersQty}</td>
         </tr>
-    {:else}
-            {#each vuelos.slice(page*pagination, (page+1)*pagination) as vuelo}
-                <tr class="table-item" on:click={()=>console.log(vuelo)}>
-                    <td>
-                        <a href={`/map/${vuelo.flightNumber}`}>{vuelo.flightNumber}</a>
-                    </td>
-                    <td>{vuelo.origin}</td>
-                    <td>{vuelo.destination}</td>
-                    <td>{vuelo.airline}</td>
-                    <td>{vuelo.averageAge.toFixed(2)} años</td>
-                    <td></td>
-                    <td>{vuelo.aircraftName}</td>
-                    <td>{vuelo.passengersQty}</td>
-                </tr>
-            {/each}
-    {/if}
+        {/each}
     </table>
+    {/if}
 </div>
 
 {#if !loading}
@@ -112,24 +109,24 @@
     #table {
         display: flex;
         justify-content: center;
-    }
-
-    .center-loader .spinner {
-        margin: 30px auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        background-color: #303138;        
+        border-radius: 15px;
     }
 
     table {
         background-color: #303138;
         border-radius: 15px;
-        margin: 2rem 1rem;
+        margin: 1rem 1rem;
 
         font-family: arial, sans-serif;
         border-collapse: collapse;
 
-        width: 50%;
+        width: 100%;
+        max-width: 90.8rem;
+
+        display: block;
+        overflow-x: auto;
+        table-layout: fixed; 
     }
     
     th, td {
@@ -146,11 +143,20 @@
         border-top: 1px solid #8689A2;
     }
 
+    /* #table-titles :nth-child(0) { */
+        /* width: 4rem; */
+        /* overflow-wrap: break-word; */
+        /* overflow: hidden; */
+        /* background-color: rgba(150, 212, 212, 0.4); */
+    /* } */
 
     #page {
         display: flex;
         justify-content: center;
-        margin-bottom: 3rem;
+
+        height: 2rem;
+        padding: 1.5rem;
+        background-color: red;
     }
 
     .page-number {
