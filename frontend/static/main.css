@@ -8,3 +8,42 @@ a:link { color: lightskyblue; }
 a:visited { color: #6d4b8d; }
 a:hover { color: #F8F8F8; }
 a:active { color: #ff4040; text-decoration:none; font-weight:normal; }
+
+
+
+#table {
+    display: flex;
+    justify-content: center;
+    background-color: #303138;        
+    border-radius: 15px;
+}
+
+table {
+    background-color: #303138;
+    border-radius: 15px;
+    margin: 1rem 1rem;
+
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+
+    width: 100%;
+
+    display: block;
+    overflow-x: auto;
+    table-layout: fixed; 
+}
+
+th, td {
+    text-align: left;
+    padding: 18px;
+}
+
+th {
+    border-bottom: 1px solid #8689A2;
+    color: #8689A2;
+}
+
+td {
+    border-top: 1px solid #8689A2;
+    color: white;
+}
