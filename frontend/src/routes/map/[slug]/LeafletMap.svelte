@@ -17,6 +17,7 @@
         if(browser) {  
             const response = await fetch(PUBLIC_BASE_URL+`/vuelo/${flightNumber}`);
             const vuelo = await response.json();
+            console.log(vuelo)
             passengers = vuelo.passengers
 
             const leaflet = await import('leaflet');
