@@ -146,16 +146,66 @@ def vuelos():
     passengers = passengers.reset_index()
     
     flights = pd.merge(flights, passengers, on="flightNumber")
-    # print(tickets)
-    # for col in passengers.columns:
-    #     print(col)
-    # print(passengers) 
 
     return flights.to_dict('records')
-    return ""
 
-@app.get("/vuelo/{flight_id}")
-def vuelo(flight_id: str):
+@app.get("/vuelo/{flight_number}")
+def vuelo(flight_number: int):
+    
+    # # read flights
+    root_directory = f'{APP_FOLDER}/downloads/flights/'
+    json_pattern = os.path.join(root_directory, '**', '*.json')
+    file_list = glob.glob(json_pattern, recursive=True)
+    
+    temp = []
+    for file in file_list:
+        data = pd.read_json(file)
+        temp.append(data)
+    
+    flights = pd.concat(temp, ignore_index=True)
+    flight = flights[ flights["flightNumber"]==flight_number ]
+
+    # read aircrafts
+    # TODO, doesnt have root node
+    aircrafts = pd.read_xml(f'{APP_FOLDER}/downloads/aircrafts.xml')
+    aircraft = pd.concat([flight, aircrafts], axis=1, join="inner")
+    aircraft = aircraft[ ['name','aircraftType']]
+
+    # read airports
+    # TODO, some lines have , in them. 
+    airports = pd.read_csv(f'{APP_FOLDER}/downloads/airports.csv', on_bad_lines='skip')
+    airports = [
+        pd.merge(flight, airports, left_on="originIATA", right_on="airportIATA"),
+        pd.merge(flight, airports, left_on="destinationIATA", right_on="airportIATA")
+    ]
+    airports[0] = airports[0][ ['name','city','country','lat','lon']].to_dict('records')[0]
+    airports[1] = airports[1][ ['name','city','country','lat','lon']].to_dict('records')[0]
+
+    # read tickets  
+    with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
+        tickets = pd.read_csv(f)
+        tickets['passengerID']=tickets['passengerID'].astype(int)
+        tickets = tickets[ tickets['flightNumber'] == flight_number]
+
+    # read passengers
+    with open(f'{APP_FOLDER}/downloads/passengers.json') as f:
+        passengers_json = json.loads(f.read())['passengers']
+        passengers = pd.DataFrame.from_dict(passengers_json)
+        passengers['passengerID']=passengers['passengerID'].astype(int)
+        passengers['birthDate'] = passengers['birthDate'].apply(lambda x: spanish_to_english_date(x))
+
+        passengers['age'] = (datetime.now() - passengers['birthDate']).dt.days // 365.2425
+
+    passengers = pd.merge(tickets, passengers, on="passengerID")
+    passengers = passengers[['passengerID','avatar','firstName','lastName','seatNumber','age','gender','weight(kg)','height(cm)']]
+
+    aircraft = aircraft.to_dict('records')
+    passengers = passengers.to_dict('records')
+    flight = flight[ ['flightNumber', 'airline'] ].to_dict('records')[0]
+
     return {
-        ""
+        'flight': flight,
+        'airports': airports,
+        'aircraft': aircraft[0] if aircraft else {},
+        'passengers': passengers,
     }
