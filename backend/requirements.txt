@@ -5,3 +5,4 @@ pandas
 lxml
 celery
 requests
+fastapi-utils
