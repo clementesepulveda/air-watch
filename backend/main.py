@@ -9,7 +9,17 @@ import json
 import glob
 from datetime import datetime
 
+from fastapi_utils.tasks import repeat_every
+import asyncio
+from celery import Celery
+import requests
+
+# app2 = Celery('tasks', backend='rpc://', broker='pyamqp://guest@localhost//')
+
+
+
 app = FastAPI()
+
 
 APP_FOLDER = "."
 
@@ -21,6 +31,14 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+@app.on_event("startup")
+@repeat_every(seconds=60 * 10)  # 10 minutes
+def call_front():
+    res = requests.get('https://air-watch.onrender.com/')
+    response = json.loads(res.text)
+    print(response)
+
+# @app2.task
 def download_gcs_file(bucket_name, file_name, destination_file_name): 
     storage_client = storage.Client()
 
@@ -35,16 +53,21 @@ def download_gcs_file(bucket_name, file_name, destination_file_name):
     print(file_name)
     with open(destination_file_name, 'wb') as file_obj:
         blob.download_to_file(file_obj)
-    # with open(destination_file_name, 'wb') as file_obj:
-    #     blob.download_to_file(file_obj)
-    # blob.download_to_filename(destination_file_name)
+        if '.yaml' in file_name: # optimization for reading later
+            with open(f'{APP_FOLDER}/downloads/{file_name}', 'r') as file:
+                yaml_data = yaml.load(file, Loader=Loader)
+
+            with open(f'{APP_FOLDER}/downloads/{file_name}'.replace('yaml', 'json'), 'w') as json_file:
+                json.dump(yaml_data, json_file)
+            
 
     return True
 
+# @app.on_event("startup")
+# @repeat_every(seconds=10)  # 1 hour
 @app.get("/download_files")
-async def download_files():
-    for i in os.listdir():
-        print(i)
+def download_files(): # background_task: BackgroundTasks
+    print("Starting download.")
 
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f'{APP_FOLDER}/private_key.json'
 
@@ -60,15 +83,12 @@ async def download_files():
     for year in [i for i in range(2015, 2024)]:
         for month in [i for i in range(1, 13)]:
             files.append(f'flights/{year}/{month:02}/flight_data.json')
-
+    
     for file_name in files:
+        # background_task.add_task(download_gcs_file, bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
         download_gcs_file(bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')  
-        if '.yaml' in file_name: # optimization for reading later
-            with open(f'{APP_FOLDER}/downloads/{file_name}', 'r') as file:
-                yaml_data = yaml.load(file, Loader=Loader)
 
-            with open(f'{APP_FOLDER}/downloads/{file_name}'.replace('yaml', 'json'), 'w') as json_file:
-                json.dump(yaml_data, json_file)
+    return {"message": "Files are currently downloading."}
 
 @app.get("/")
 async def root():
@@ -106,6 +126,7 @@ def vuelos():
     
     temp = []
     for file in file_list:
+        print('reading', file)
         data = pd.read_json(file)
         temp.append(data)
     
