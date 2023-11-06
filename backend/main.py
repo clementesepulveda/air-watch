@@ -31,12 +31,14 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@app.on_event("startup")
 @repeat_every(seconds=60 * 10)  # 10 minutes
-def call_front():
+async def call_front():
     res = requests.get('https://air-watch.onrender.com/')
-    response = json.loads(res.text)
-    print(response)
+    print(res.status_code)
+
+@app.on_event("startup")
+async def startup_event():
+    await call_front()
 
 # @app2.task
 def download_gcs_file(bucket_name, file_name, destination_file_name): 
