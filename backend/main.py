@@ -10,8 +10,8 @@ import glob
 from datetime import datetime
 
 from fastapi_utils.tasks import repeat_every
-import asyncio
-from celery import Celery
+# import asyncio
+# from celery import Celery
 import requests
 
 # app2 = Celery('tasks', backend='rpc://', broker='pyamqp://guest@localhost//')
