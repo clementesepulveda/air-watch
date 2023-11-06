@@ -33,6 +33,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"echarts": "^5.4.3",
 		"svelte-loading-spinners": "^0.3.4"
 	}
 }

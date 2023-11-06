@@ -2,7 +2,9 @@
     // @ts-nocheck
 	import { SyncLoader } from 'svelte-loading-spinners';
 
-    let vuelos = []
+    export let title_keys;
+    export let titles; // title_keys: title
+    export let data; // [row1, row2]
 
     let current_sort_key = "";
     let sort_dir = 1;
@@ -20,21 +22,19 @@
 
         current_sort_key = attribute;
     }
+
+    let page = 0;
+    let pagination = 15;
 </script>
 
-<h1>Vuelos</h1>
+<h1>Title</h1>
 
 <div id="table">
     <table>
         <tr id="table-titles">
-            <th>Flight Number <button on:click={()=>sort_by('flightNumber')}>s</button></th>
-            <th>Origen <button on:click={()=>sort_by('origin')}>s</button></th>
-            <th>Destino <button on:click={()=>sort_by('destination')}>s</button></th>
-            <th>Aerolínea <button on:click={()=>sort_by('airline')}>s</th>
-            <th>Edad Promedio <button on:click={()=>sort_by('averageAge')}>s</th>
-            <th>Distancia Recorrida <button on:click={()=>sort_by('dist_recorrida')}>s</th>
-            <th>Nombre Avión <button on:click={()=>sort_by('aircraftName')}>s</th>
-            <th>Cantidad Pasajeros <button on:click={()=>sort_by('passengersQty')}>s</th>
+            {#each title_keys as title_key}
+                <th>{titles[title_key]}<button on:click={()=>sort_by(title_key)}>s</button></th>
+            {/each}
         </tr>
     {#if loading}
         <tr>
@@ -45,7 +45,7 @@
             </td>
         </tr>
     {:else}
-            {#each vuelos.slice(page*pagination, (page+1)*pagination) as vuelo}
+            {#each data.slice(page*pagination, (page+1)*pagination) as item}
                 <tr class="table-item" on:click={()=>console.log(vuelo)}>
                     <td>
                         <a href={`/map/${vuelo.flightNumber}`}>{vuelo.flightNumber}</a>

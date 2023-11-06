@@ -67,38 +67,41 @@
 </script>
 
 
-<div id='map'>
-    <div bind:this={mapElement}></div>
-</div>
-<div id='users'>
-    <table>
-        <tr>
-            <th></th>
-            <th>Name<button on:click={()=>sort_by('firstName')}>s</button></th>
-            <th>Seat Number<button on:click={()=>sort_by('lastName')}>s</button></th>
-            <th>Age<button on:click={()=>sort_by('age')}>s</button></th>
-            <th>Gender<button on:click={()=>sort_by('gender')}>s</button></th>
-            <th>Weight<button on:click={()=>sort_by('weight(kg)')}>s</button></th>
-            <th>Height<button on:click={()=>sort_by('height(cm)')}>s</button></th>
-        </tr>
-
-        {#each passengers as passenger}
-        <tr>
-            <th><img src={passenger.avatar} alt="passanger"></th>
-            <th>{passenger.firstName} {passenger.firstName}</th>
-            <th>{passenger.seatNumber}</th>
-            <th>{passenger.age}</th>
-            <th>{passenger.gender}</th>
-            <th>{passenger['weight(kg)']}</th>
-            <th>{passenger['height(cm)']}</th>
-        </tr>
-        {/each}
-    </table>
+<div class="page-container">
+    <div id='map'>
+        <div bind:this={mapElement}></div>
+    </div>
+    <div id='users'>
+        <table>
+            <tr>
+                <th></th>
+                <th>Name<button on:click={()=>sort_by('firstName')}>s</button></th>
+                <th>Seat Number<button on:click={()=>sort_by('lastName')}>s</button></th>
+                <th>Age<button on:click={()=>sort_by('age')}>s</button></th>
+                <th>Gender<button on:click={()=>sort_by('gender')}>s</button></th>
+                <th>Weight<button on:click={()=>sort_by('weight(kg)')}>s</button></th>
+                <th>Height<button on:click={()=>sort_by('height(cm)')}>s</button></th>
+            </tr>
+    
+            {#each passengers as passenger}
+            <tr>
+                <td><img src={passenger.avatar} alt="passanger"></td>
+                <td>{passenger.firstName} {passenger.firstName}</td>
+                <td>{passenger.seatNumber}</td>
+                <td>{passenger.age}</td>
+                <td>{passenger.gender}</td>
+                <td>{passenger['weight(kg)']}</td>
+                <td>{passenger['height(cm)']}</td>
+            </tr>
+            {/each}
+        </table>
+    </div>
 </div>
 
 <style>
     @import 'leaflet/dist/leaflet.css';
     #map div{
+        width: 800px;
         height: 800px; 
         border-radius: 10px;
         margin: 1rem;
@@ -110,6 +113,10 @@
 
     table {
         max-width: 48rem;
+    }
+
+    .page-container {
+        display: flex;
     }
 
 </style>
