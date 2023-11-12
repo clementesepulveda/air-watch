@@ -16,6 +16,7 @@ import requests
 
 # app2 = Celery('tasks', backend='rpc://', broker='pyamqp://guest@localhost//')
 
+import uvicorn
 
 
 app = FastAPI()
@@ -33,6 +34,7 @@ app.add_middleware(
 
 @repeat_every(seconds=60 * 10)  # 10 minutes
 async def call_front():
+    print('calling frontend')
     res = requests.get('https://air-watch.onrender.com/')
     print(res.status_code)
 
@@ -55,14 +57,24 @@ def download_gcs_file(bucket_name, file_name, destination_file_name):
     print(file_name)
     with open(destination_file_name, 'wb') as file_obj:
         blob.download_to_file(file_obj)
-        if '.yaml' in file_name: # optimization for reading later
-            with open(f'{APP_FOLDER}/downloads/{file_name}', 'r') as file:
-                yaml_data = yaml.load(file, Loader=Loader)
 
-            with open(f'{APP_FOLDER}/downloads/{file_name}'.replace('yaml', 'json'), 'w') as json_file:
-                json.dump(yaml_data, json_file)
+    if '.yaml' in file_name: 
+        # Convert YAML to JSON
+        with open(f'{APP_FOLDER}/downloads/{file_name}', 'r') as file:
+            yaml_data = yaml.load(file, Loader=Loader)
+
+        with open(f'{APP_FOLDER}/downloads/{file_name}'.replace('yaml', 'json'), 'w') as json_file:
+            json.dump(yaml_data, json_file)
+
+    if 'xml' in file_name:
+        with open(f'{APP_FOLDER}/downloads/{file_name}', 'r') as file:
+            xml_content = file.read()
+
+        xml_with_root = f'<root>\{xml_content}</root>'
+
+        with open(f'{APP_FOLDER}/downloads/{file_name}', 'w') as file:
+            file.write(xml_with_root)
             
-
     return True
 
 # @app.on_event("startup")
@@ -88,14 +100,13 @@ def download_files(): # background_task: BackgroundTasks
     
     for file_name in files:
         # background_task.add_task(download_gcs_file, bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
-        download_gcs_file(bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')  
+        download_gcs_file(bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
 
     return {"message": "Files are currently downloading."}
 
 @app.get("/")
 async def root():
     # await download_files()
-
     return {"message": "Hello World"}
 
 def spanish_to_english_date(d):
@@ -135,7 +146,6 @@ def vuelos():
     flights = pd.concat(temp, ignore_index=True)
 
     # # read aircrafts
-    # # TODO, doesnt have root node
     aircrafts = pd.read_xml(f'{APP_FOLDER}/downloads/aircrafts.xml')
     aircrafts = aircrafts.rename(columns={"name":"aircraftName"})
     flights = pd.concat([flights, aircrafts], axis=1, join="inner")
@@ -170,11 +180,13 @@ def vuelos():
     
     flights = pd.merge(flights, passengers, on="flightNumber")
 
+    # total distance
+    flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
+
     return flights.to_dict('records')
 
 @app.get("/vuelo/{flight_number}")
 def vuelo(flight_number: int):
-    
     # # read flights
     root_directory = f'{APP_FOLDER}/downloads/flights/'
     json_pattern = os.path.join(root_directory, '**', '*.json')
@@ -232,3 +244,35 @@ def vuelo(flight_number: int):
         'aircraft': aircraft[0] if aircraft else {},
         'passengers': passengers,
     }
+
+@app.get("/vuelos_cantidad_data/")
+def vuelos_data(year: str = None, flight_class: str = None):
+    # read flights
+    root_directory = f'{APP_FOLDER}/downloads/flights/'
+    json_pattern = os.path.join(root_directory, '**', '*.json')
+    file_list = glob.glob(json_pattern, recursive=True)
+    
+    temp = []
+    for file in file_list:
+        if year == None or year == file.split('/')[3]: # TODO make this prettier
+            print('reading', file)
+            data = pd.read_json(file)
+            temp.append(data)
+    
+    if temp == []:
+        return {"status_code": 400, "message": f"year {year} doesnt exist"}
+
+    flights = pd.concat(temp, ignore_index=True)
+
+    # read tickets  
+    with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
+        tickets = pd.read_csv(f)
+        if flight_class != None:
+            tickets = tickets[tickets['flightType'] == flight_class]
+            
+    tickets = tickets[tickets['flightNumber'].isin(flights['flightNumber'])]
+    
+    tickets = tickets.groupby(by="flightNumber").count()['ticketID'].reset_index().rename(columns={"ticketID": "total_passengers"})
+    flights = pd.merge(flights, tickets, how='inner', on="flightNumber")[['airline','total_passengers']]
+    flights = flights.groupby(by="airline").sum().reset_index()
+    return flights.to_dict('records')
