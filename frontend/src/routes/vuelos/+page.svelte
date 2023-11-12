@@ -43,7 +43,6 @@
     }
 
     onMount(async () => {
-
         loading = true;
 
         const response = await fetch(PUBLIC_BASE_URL+"/vuelos");
@@ -100,7 +99,7 @@
             <td>{vuelo.city_y}, {vuelo.destination}</td>
             <td>{vuelo.airline}</td>
             <td>{vuelo.averageAge.toFixed(2)} years</td>
-            <td></td>
+            <td>{vuelo.distance.toFixed(2)} km</td>
             <td>{vuelo.aircraftName}</td>
             <td>{vuelo.passengersQty}</td>
         </tr>
