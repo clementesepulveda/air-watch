@@ -77,7 +77,6 @@ def download_files(): # background_task: BackgroundTasks
     for file_name in files:
         # background_task.add_task(download_gcs_file, bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
         download_gcs_file(bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
-        break
 
     return {"message": "Files are currently downloading."}
 
