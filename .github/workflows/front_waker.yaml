@@ -15,4 +15,4 @@ jobs:
           python-version: '3.7'
       - name: Run code
         run: |
-          python3 main.py
+          python3 call_frontend.py
