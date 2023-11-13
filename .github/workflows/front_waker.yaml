@@ -1,0 +1,17 @@
+name: frontend-wake
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  my-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setpup-python@v1
+        with: 
+          python-version: '3.7'
+      - name: Run code
+        run: python3 call_frontend.py
