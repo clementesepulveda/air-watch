@@ -1,13 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from google.cloud import storage
 import os
 import pandas as pd
 import yaml
-from yaml import CLoader as Loader
 import json
-from datetime import datetime
+
+from downloader import download_files
 
 app = FastAPI()
 
@@ -24,86 +24,71 @@ app.add_middleware(
 
 
 # @app2.task
-def download_gcs_file(bucket_name, file_name, destination_file_name): 
-    storage_client = storage.Client()
+# def download_gcs_file(bucket_name, file_name, destination_file_name):
+#     storage_client = storage.Client()
 
-    bucket = storage_client.bucket(bucket_name)
+#     bucket = storage_client.bucket(bucket_name)
 
-    blob = bucket.blob(file_name)
+#     blob = bucket.blob(file_name)
 
-    dirname = os.path.dirname(destination_file_name)
-    if dirname and not os.path.isdir(dirname):
-        os.makedirs(dirname)
+#     dirname = os.path.dirname(destination_file_name)
+#     if dirname and not os.path.isdir(dirname):
+#         os.makedirs(dirname)
 
-    print(file_name)
-    with open(destination_file_name, 'wb') as file_obj:
-        blob.download_to_file(file_obj)
+#     print('Downloading',file_name)
+#     with open(destination_file_name, 'wb') as file_obj:
+#         blob.download_to_file(file_obj)
 
-    if '.yaml' in file_name: 
-        # Convert YAML to JSON
-        with open(f'{APP_FOLDER}/downloads/{file_name}', 'r') as file:
-            yaml_data = yaml.load(file, Loader=Loader)
+#     if '.yaml' in file_name:
+#         # Convert YAML to JSON
+#         with open(f'{APP_FOLDER}/downloads/{file_name}', 'r') as file:
+#             yaml_data = yaml.load(file, Loader=yaml.Loader)
 
-        with open(f'{APP_FOLDER}/downloads/{file_name}'.replace('yaml', 'json'), 'w') as json_file:
-            json.dump(yaml_data, json_file)
-            
-    return True
+#         with open(f'{APP_FOLDER}/downloads/{file_name}'.replace('yaml', 'json'), 'w') as json_file:
+#             json.dump(yaml_data, json_file)
+
+#     print("done :)")
+#     return True
+
+# async def download_files():
+#     print("Downloading files")
+#     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f'{APP_FOLDER}/private_key.json'
+
+#     bucket_name = "2023-2-tarea3"
+
+#     files = [
+#         'aircrafts.xml',
+#         'airports.csv',
+#         'passengers.yaml',
+#         'tickets.csv'
+#     ]
+
+#     for year in [i for i in range(2015, 2024)]:
+#         for month in [i for i in range(1, 13)]:
+#             files.append(f'flights/{year}/{month:02}/flight_data.json')
+
+#     for file_name in files:
+#         print("Starting", file_name)
+#         download_gcs_file(bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
+
+# async def run_download_files():
+#     print("Starting download.")
+#     await download_files()
 
 @app.get("/download_files")
-def download_files(): # background_task: BackgroundTasks
-    print("Starting download.")
-
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f'{APP_FOLDER}/private_key.json'
-
-    bucket_name = "2023-2-tarea3"
-
-    files = [
-        'aircrafts.xml',
-        'airports.csv',
-        'passengers.yaml',
-        'tickets.csv'
-    ]
-
-    for year in [i for i in range(2015, 2024)]:
-        for month in [i for i in range(1, 13)]:
-            files.append(f'flights/{year}/{month:02}/flight_data.json')
-    
-    for file_name in files:
-        # background_task.add_task(download_gcs_file, bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
-        download_gcs_file(bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
-
-    return {"message": "Files are currently downloading."}
+async def download_files_endpoint(background_tasks: BackgroundTasks):
+    await download_files()
+    # background_tasks.add_task(download_files)
+    # await run_download_files()
+    return {"message": "Files downloaded."}
 
 @app.get("/")
 async def root():
-    # await download_files()
     return {"message": "Hello World"}
 
 @app.get('/favicon.ico', include_in_schema=False)
 async def favicon():
     return FileResponse("./favicon.ico")
-
-
-def spanish_to_english_date(d):
-    mapping_dict = {
-        'enero':'january',
-        'febrero':'february',
-        'marzo':'march',
-        'abril':'april',
-        'mayo':'may',
-        'junio':'june',
-        'julio':'july',
-        'agosto':'august',
-        'septiembre':'september',
-        'octubre':'october',
-        'noviembre':'november',
-        'diciembre':'december'
-    }
-    
-    d = d.replace(d.split(" ")[2], mapping_dict[d.split(" ")[2]])
-    d = d.replace("de ", "")
-    datetime_object = datetime.strptime(d, '%d %B %Y')
-    return datetime_object
 
 @app.get("/vuelos")
 def vuelos():
