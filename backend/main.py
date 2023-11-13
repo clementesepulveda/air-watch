@@ -8,6 +8,7 @@ import yaml
 import json
 
 from downloader import download_files
+from files_optimizer import optimize_files
 
 app = FastAPI()
 
@@ -76,8 +77,10 @@ app.add_middleware(
 #     await download_files()
 
 @app.get("/download_files")
-async def download_files_endpoint(background_tasks: BackgroundTasks):
-    await download_files()
+def download_files_endpoint(background_tasks: BackgroundTasks):
+    download_files()
+    optimize_files()
+
     # background_tasks.add_task(download_files)
     # await run_download_files()
     return {"message": "Files downloaded."}

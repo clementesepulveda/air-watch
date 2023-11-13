@@ -1,5 +1,7 @@
 from google.cloud import storage
 import os
+import yaml
+import json
 
 def download_cs_file(bucket_name, file_name, destination_file_name):
     storage_client = storage.Client()
@@ -16,6 +18,7 @@ def download_cs_file(bucket_name, file_name, destination_file_name):
     return True
 
 def download_files():
+
     # set key credentials file path
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './private_key.json'
 
