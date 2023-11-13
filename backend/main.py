@@ -7,13 +7,7 @@ import pandas as pd
 import yaml
 from yaml import CLoader as Loader
 import json
-import glob
 from datetime import datetime
-
-from fastapi_utils.tasks import repeat_every
-import requests
-
-import uvicorn
 
 app = FastAPI()
 
@@ -114,17 +108,7 @@ def spanish_to_english_date(d):
 @app.get("/vuelos")
 def vuelos():
     # read flights
-    root_directory = f'{APP_FOLDER}/downloads/flights/'
-    json_pattern = os.path.join(root_directory, '**', '*.json')
-    file_list = glob.glob(json_pattern, recursive=True)
-    
-    temp = []
-    for file in file_list:
-        print('reading', file)
-        data = pd.read_json(file)
-        temp.append(data)
-    
-    flights = pd.concat(temp, ignore_index=True)
+    flights = pd.read_json('downloads/flights.json')
 
     # # read aircrafts
     aircrafts = pd.read_xml(f'{APP_FOLDER}/downloads/aircrafts.xml')
@@ -145,13 +129,7 @@ def vuelos():
         tickets['passengerID']=tickets['passengerID'].astype(int)
 
     # read passengers
-    with open(f'{APP_FOLDER}/downloads/passengers.json') as f:
-        passengers_json = json.loads(f.read())['passengers']
-        passengers = pd.DataFrame.from_dict(passengers_json)
-        passengers['passengerID']=passengers['passengerID'].astype(int)
-        passengers['birthDate'] = passengers['birthDate'].apply(lambda x: spanish_to_english_date(x))
-
-        passengers['age'] = (datetime.now() - passengers['birthDate']).dt.days // 365.2425
+    passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
 
     passengers = pd.merge(tickets,passengers, on="passengerID")
     passengers = passengers.groupby('flightNumber')['age'].agg(['sum','count'])
@@ -168,17 +146,8 @@ def vuelos():
 
 @app.get("/vuelo/{flight_number}")
 def vuelo(flight_number: int):
-    # # read flights
-    root_directory = f'{APP_FOLDER}/downloads/flights/'
-    json_pattern = os.path.join(root_directory, '**', '*.json')
-    file_list = glob.glob(json_pattern, recursive=True)
-    
-    temp = []
-    for file in file_list:
-        data = pd.read_json(file)
-        temp.append(data)
-    
-    flights = pd.concat(temp, ignore_index=True)
+    # read flights
+    flights = pd.read_json('downloads/flights.json')
     flight = flights[ flights["flightNumber"]==flight_number ]
 
     # read aircrafts
@@ -204,13 +173,7 @@ def vuelo(flight_number: int):
         tickets = tickets[ tickets['flightNumber'] == flight_number]
 
     # read passengers
-    with open(f'{APP_FOLDER}/downloads/passengers.json') as f:
-        passengers_json = json.loads(f.read())['passengers']
-        passengers = pd.DataFrame.from_dict(passengers_json)
-        passengers['passengerID']=passengers['passengerID'].astype(int)
-        passengers['birthDate'] = passengers['birthDate'].apply(lambda x: spanish_to_english_date(x))
-
-        passengers['age'] = (datetime.now() - passengers['birthDate']).dt.days // 365.2425
+    passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
 
     passengers = pd.merge(tickets, passengers, on="passengerID")
     passengers = passengers[['passengerID','avatar','firstName','lastName','seatNumber','age','gender','weight(kg)','height(cm)']]
@@ -227,23 +190,11 @@ def vuelo(flight_number: int):
     }
 
 @app.get("/vuelos_cantidad_data/")
-def data_cantidad(year: str = None, flight_class: str = None):
+def data_cantidad(year: int = None, flight_class: str = None):
     # read flights
-    root_directory = f'{APP_FOLDER}/downloads/flights/'
-    json_pattern = os.path.join(root_directory, '**', '*.json')
-    file_list = glob.glob(json_pattern, recursive=True)
-    
-    temp = []
-    for file in file_list:
-        if year == None or year == file.split('/')[3]: # TODO make this prettier
-            print('reading', file)
-            data = pd.read_json(file)
-            temp.append(data)
-    
-    if temp == []:
-        return {"status_code": 400, "message": f"year {year} doesnt exist"}
-
-    flights = pd.concat(temp, ignore_index=True)
+    flights = pd.read_json('downloads/flights.json')
+    if year != None:
+        flights = flights[flights['year'] == year]
 
     # read tickets  
     with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
@@ -259,23 +210,11 @@ def data_cantidad(year: str = None, flight_class: str = None):
     return flights.to_dict('records')
 
 @app.get("/population_data")
-def data_poblacion(year: str = None):
+def data_poblacion(year: int = None):
     # read flights
-    root_directory = f'{APP_FOLDER}/downloads/flights/'
-    json_pattern = os.path.join(root_directory, '**', '*.json')
-    file_list = glob.glob(json_pattern, recursive=True)
-    
-    temp = []
-    for file in file_list:
-        if year == None or year == file.split('/')[3]: # TODO make this prettier
-            print('reading', file)
-            data = pd.read_json(file)
-            temp.append(data)
-    
-    if temp == []:
-        return {"status_code": 400, "message": f"year {year} doesnt exist"}
-
-    flights = pd.concat(temp, ignore_index=True)
+    flights = pd.read_json('downloads/flights.json')
+    if year != None:
+        flights = flights[flights['year'] == year]
 
     # read tickets  
     with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
@@ -284,15 +223,7 @@ def data_poblacion(year: str = None):
     tickets = tickets[tickets['flightNumber'].isin(flights['flightNumber'])]
 
     # read passengers
-    with open(f'{APP_FOLDER}/downloads/passengers.json') as f:
-        passengers_json = json.loads(f.read())['passengers']
-        passengers = pd.DataFrame.from_dict(passengers_json)
-        passengers['passengerID']=passengers['passengerID'].astype(int)
-        passengers = passengers[passengers['passengerID'].isin(tickets['passengerID'])]
-
-        passengers['birthDate'] = passengers['birthDate'].apply(lambda x: spanish_to_english_date(x))
-
-        passengers['age'] = ((datetime.now() - passengers['birthDate']).dt.days // 365.2425).astype(int) 
+    passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
     
     all_age_values = pd.DataFrame({'age': range(1, 100)})
 
