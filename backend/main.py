@@ -11,14 +11,9 @@ import glob
 from datetime import datetime
 
 from fastapi_utils.tasks import repeat_every
-# import asyncio
-# from celery import Celery
 import requests
 
-# app2 = Celery('tasks', backend='rpc://', broker='pyamqp://guest@localhost//')
-
 import uvicorn
-
 
 app = FastAPI()
 
@@ -33,15 +28,6 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@repeat_every(seconds=60 * 10)  # 10 minutes
-async def call_front():
-    print('calling frontend')
-    res = requests.get('https://air-watch.onrender.com/')
-    print(res.status_code)
-
-@app.on_event("startup")
-async def startup_event():
-    await call_front()
 
 # @app2.task
 def download_gcs_file(bucket_name, file_name, destination_file_name): 
@@ -69,8 +55,6 @@ def download_gcs_file(bucket_name, file_name, destination_file_name):
             
     return True
 
-# @app.on_event("startup")
-# @repeat_every(seconds=10)  # 1 hour
 @app.get("/download_files")
 def download_files(): # background_task: BackgroundTasks
     print("Starting download.")
@@ -93,6 +77,7 @@ def download_files(): # background_task: BackgroundTasks
     for file_name in files:
         # background_task.add_task(download_gcs_file, bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
         download_gcs_file(bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
+        break
 
     return {"message": "Files are currently downloading."}
 
