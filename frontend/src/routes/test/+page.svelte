@@ -1,4 +1,4 @@
-<script>
+<!-- <script>
 	import FlightsTable from "../../components/FlightsTable.svelte";
 
     const column_keys = ['key1', 'key2']
@@ -14,4 +14,13 @@
     column_keys={column_keys} 
     titles={titles}
     data={data}
-/>
+/> -->
+
+<script>
+	import PopulationGraph from "../../components/PopulationGraph.svelte";
+	import SortingIcon from "../../components/SortingIcon.svelte";
+
+</script>
+
+<!-- <PopulationGraph /> -->
+<SortingIcon />

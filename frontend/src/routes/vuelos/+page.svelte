@@ -5,6 +5,7 @@
 	import { SyncLoader } from 'svelte-loading-spinners';
     import Navbar from '../../components/Navbar.svelte';
 	import { createSearchStore, searchHandler } from '$lib/stores/search';
+	import SortingIcon from '../../components/SortingIcon.svelte';
      
     let searchedFlights = []
     let searchStore = null;
@@ -69,56 +70,57 @@
 
 <h1>Flights</h1>
 
-<div id="table">
-    {#if loading}
-        <div class="spinner">
-            <SyncLoader color="#F8F8F8"/>
-        </div>
-    {:else}
+<div id="table-container">
+    <div id="table">
+        {#if loading}
+            <div class="spinner">
+                <SyncLoader color="#F8F8F8"/>
+            </div>
+        {:else}
+            <table>
+                <input type="search" placeholder="Search city" bind:value={$searchStore.search}>
 
-    <input type="search" placeholder="Search city" bind:value={$searchStore.search}>
-
-    <table>
-        <tr id="table-titles">
-            <th>Flight Number <button on:click={()=>sort_by('flightNumber')}>s</button></th>
-            <th>Origin <button on:click={()=>sort_by('origin')}>s</button></th>
-            <th>Destination <button on:click={()=>sort_by('destination')}>s</button></th>
-            <th>Airline <button on:click={()=>sort_by('airline')}>s</th>
-            <th>Avg Age <button on:click={()=>sort_by('averageAge')}>s</th>
-            <th>Total Distance <button on:click={()=>sort_by('dist_recorrida')}>s</th>
-            <th>Plane <button on:click={()=>sort_by('aircraftName')}>s</th>
-            <th>#Passengers <button on:click={()=>sort_by('passengersQty')}>s</th>
-        </tr>
-
-        {#each $searchStore.filtered.slice(page*pagination, (page+1)*pagination) as vuelo}
-        <tr class="table-item" on:click={()=>console.log(vuelo)}>
-            <td>
-                <a href={`/map/${vuelo.flightNumber}`}>{vuelo.flightNumber}</a>
-            </td>
-            <td>{vuelo.city_x}, {vuelo.origin}</td>
-            <td>{vuelo.city_y}, {vuelo.destination}</td>
-            <td>{vuelo.airline}</td>
-            <td>{vuelo.averageAge.toFixed(2)} years</td>
-            <td>{vuelo.distance.toFixed(2)} km</td>
-            <td>{vuelo.aircraftName}</td>
-            <td>{vuelo.passengersQty}</td>
-        </tr>
-        {/each}
-    </table>
-    <div id="page">
-        <button on:click={()=>change_page(-1)}>left</button>
-        {#each Array.from({length: 10}, (_, i) => i + page - 5).filter(v=> v >= 0) as page_number}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <!-- svelte-ignore a11y-no-static-element-interactions -->
-            {#if page_number===page}
-                <div on:click={()=>change_to_page(page_number)} class="current-page page-number">{page_number+1}</div>
-            {:else}
-                <div on:click={()=>change_to_page(page_number)} class="page-number">{page_number+1}</div>
-            {/if}
-        {/each}
-        <button on:click={()=>change_page(1)}>right</button>
+                <tr id="table-titles">
+                    <th>Flight Number <SortingIcon/> </th>
+                    <th>Origin  <SortingIcon/> </th>
+                    <th>Destination <button on:click={()=>sort_by('destination')}>s</button></th>
+                    <th>Airline <button on:click={()=>sort_by('airline')}>s</th>
+                    <th>Avg Age <button on:click={()=>sort_by('averageAge')}>s</th>
+                    <th>Total Distance <button on:click={()=>sort_by('dist_recorrida')}>s</th>
+                    <th>Plane <button on:click={()=>sort_by('aircraftName')}>s</th>
+                    <th>#Passengers <button on:click={()=>sort_by('passengersQty')}>s</th>
+                </tr>
+        
+                {#each $searchStore.filtered.slice(page*pagination, (page+1)*pagination) as vuelo}
+                <tr class="table-item" on:click={()=>console.log(vuelo)}>
+                    <td>
+                        <a href={`/map/${vuelo.flightNumber}`}>{vuelo.flightNumber}</a>
+                    </td>
+                    <td>{vuelo.city_x}, {vuelo.origin}</td>
+                    <td>{vuelo.city_y}, {vuelo.destination}</td>
+                    <td>{vuelo.airline}</td>
+                    <td>{vuelo.averageAge.toFixed(2)} years</td>
+                    <td>{vuelo.distance.toFixed(2)} km</td>
+                    <td>{vuelo.aircraftName}</td>
+                    <td>{vuelo.passengersQty}</td>
+                </tr>
+                {/each}
+            </table>
+            <div id="page">
+                <button on:click={()=>change_page(-1)}>left</button>
+                {#each Array.from({length: 10}, (_, i) => i + page - 5).filter(v=> v >= 0) as page_number}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <!-- svelte-ignore a11y-no-static-element-interactions -->
+                    {#if page_number===page}
+                        <div on:click={()=>change_to_page(page_number)} class="current-page page-number">{page_number+1}</div>
+                    {:else}
+                        <div on:click={()=>change_to_page(page_number)} class="page-number">{page_number+1}</div>
+                    {/if}
+                {/each}
+                <button on:click={()=>change_page(1)}>right</button>
+            </div>
+        {/if}
     </div>
-    {/if}
 </div>
 
 <style>
@@ -129,7 +131,15 @@
     }
 
     .spinner {
-        width: 1000px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    #table-container {
+        display: flex;
+        justify-content: center;
+        padding: 2rem
     }
 
     #table {
@@ -137,9 +147,12 @@
         flex-direction: column;
         justify-content: center;
         background-color: #303138; 
+        box-shadow: 0px 0px 25px #151518;
         border-radius: 15px;
-        max-width:fit-content;
-        margin: 1rem;
+
+        padding: 1rem;
+        width: 100%;
+        /* max-width:fit-content; */
     }
 
     table {
@@ -151,6 +164,7 @@
         display: block;
         overflow-x: auto;
         table-layout: fixed; 
+        table-layout: fixed;
     }
     
     th, td {
@@ -161,10 +175,13 @@
 
     th {
         border-bottom: 1px solid #8689A2;
-        color: #8689A2;
+        color: white;
         
         /* width: 1000px; */
         white-space: nowrap;
+        /* display: flex; */
+        align-items: center;
+        justify-content: space-between;
         /* max-width: 100px;
         overflow: hidden;
         white-space: nowrap; */
@@ -177,14 +194,16 @@
         max-width: 1000px;
         overflow: hidden;
         /* white-space: nowrap; */
+        vertical-align: top;
+        text-align: left;
     }
-
-    /* #table-titles :nth-child(0) { */
-        /* width: 4rem; */
-        /* overflow-wrap: break-word; */
-        /* overflow: hidden; */
-        /* background-color: rgba(150, 212, 212, 0.4); */
-    /* } */
+    
+    #table-titles :nth-child(0) {
+        width: 4rem;
+        overflow-wrap: break-word;
+        overflow: hidden;
+        background-color: rgba(150, 212, 212, 0.4);
+    }
 
     #page {
         display: flex;
@@ -193,7 +212,6 @@
         height: 2rem;
         padding-top: 0.5rem;
         padding-bottom: 1rem;
-        background-color: red;
     }
 
     .page-number {
@@ -202,5 +220,12 @@
 
     .current-page {
         font-weight: bolder;
+    }
+
+    input {
+        border: 0px;
+        width: 100%;
+        max-width: 50rem;
+        margin-bottom: 1rem;
     }
 </style>

@@ -14,15 +14,11 @@
     let myChart;
 
     onMount( async () => {
-        myChart = echarts.init(chartDom);
-        console.log(chartDom)
+        myChart = echarts.init(chartDom, 'dark');
         fetchData();
     });
 
     function showGraph() {
-        // var chartDom = document.getElementById('graph');
-        console.log(chartDom)
-
         window.onresize = function() {
             myChart.resize();
         };
@@ -33,12 +29,13 @@
             },
             legend: {
                 orient: 'vertical',
-                // type: 'scroll',
+                type: 'scroll',
                 left: 'left'
             },
             series: [{
                 type: 'pie',
                 radius: '50%',
+                center: ['50%', '60%'], // Adjust the y-coordinate to align to the bottom
                 data: data,
                 emphasis: {
                     itemStyle: {
@@ -62,9 +59,6 @@
         if (flight_class) {
             url += `&flight_class=${flight_class}`
         }
-
-        console.log(url)
-
         const response = await fetch(url);
         const flights = await response.json();
 
@@ -81,46 +75,76 @@
     }
 </script>
 
-<div id="graph-container">
-    <div id="title">Datos por año</div>
-    <div id="options">
-        <select name="year" id="year" bind:value={year} on:change={fetchData}>
-            <option value="">-</option>
-            {#each Array.from({length: 9}, (_,index)=> 2015+index) as i}
-                <option value={i}>{i}</option>
-            {/each}
-        </select>
-        <select name="characteristic" id="characteristic" bind:value={flight_class} on:change={fetchData}>
-            <option value="">-</option>
-            <option value="first class">first class</option>
-            <option value="economy">economy</option>
-            <option value="bussines">business</option>
-        </select>
+<main>
+    <div id="graph-container">
+        <div id="title">Number of Flights per Airline</div>
+        <div id="options-container">
+            <div id="options">
+                <label for="option">Year</label>
+                <select name="year" id="year" bind:value={year} on:change={fetchData}>
+                    <option value="">-</option>
+                    {#each Array.from({length: 9}, (_,index)=> 2015+index) as i}
+                        <option value={i}>{i}</option>
+                    {/each}
+                </select>
+                
+                <label for="option">Type of Seats</label>
+                <select name="characteristic" id="characteristic" bind:value={flight_class} on:change={fetchData}>
+                    <option value="">-</option>
+                    <option value="first class">first class</option>
+                    <option value="economy">economy</option>
+                    <option value="bussines">business</option>
+                </select>
+            </div>
+        </div>
+        <div id="graph" bind:this={chartDom}></div>
     </div>
-    <div id="graph" bind:this={chartDom}></div>
-</div>
+</main>
 
 <style>
+    main {
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+    }
+
     #graph-container {
-        background-color: red;
+        background-color: #303138; 
+        box-shadow: 0px 0px 25px #151518;
         text-align: center;
         font-size: 20pt;
 
         border-radius: 10px;
-        padding: 0rem 2rem 2rem 2rem;
-        height: 25rem;
-        width: 80%;
+        padding: 0rem 1rem 1rem 1rem;
+        height: 40rem;
+        width: 90%;
 
         display: flex;
         flex-direction: column;
     }
 
     #graph {
-        height: 34rem;
-        /* background-color: purple; */
+        flex-grow: 1;
     }
 
     #title {
         padding: 1rem;
     }
+
+    label {
+        font-size: 1rem;
+    }
+
+    #options {
+        padding-bottom: 1rem;
+    }
+
+    div#options {
+        display:grid;
+        justify-content: center;
+        grid-template-columns: max-content max-content;
+        grid-gap:5px;
+    }
+    div#options label       { text-align:right; }
+    div#options label:after { content: ":"; }
 </style>
