@@ -1,51 +1,154 @@
 <script>
     // @ts-nocheck
     
-    import { onMount } from 'svelte';
-    import { PUBLIC_BASE_URL } from '$env/static/public'
+    import { onMount, onDestroy } from 'svelte';
+	import { createSearchStore, searchHandler } from '$lib/stores/search';
+    import SortingIcon from './SortingIcon.svelte';
 
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
     export let flightNumber;
     export let passengers;
+    let searchedPassengers= []
+    let searchStore = null;
+    let unsubscribe = null;
 
     let current_sort_key = '';
     let sort_dir = 1;
+    const titles = [
+        {name: "Name", key: "firstName", state: "all"},
+        {name: "Seat Number", key: "seatNumber", state: "all"},
+        {name: "Age", key: "age", state: "all"},
+        {name: "Gender", key: "gender", state: "all"},
+        {name: "Weight", key: "weight(kg)", state: "all"},
+        {name: "Height", key: "height(cm)", state: "all"},
+    ]
+
+    let loading = true;
+    let page = 0;
+    const pagination = 15;
+    let pages = []
 
     onMount(async () => {
-        const response = await fetch(PUBLIC_BASE_URL+`/vuelo/${flightNumber}`);
-        const vuelo = await response.json();
-        passengers = vuelo.passengers;
+        loading = true;
+        
+        searchedPassengers = passengers.map( passenger => ({
+            ...passenger,
+            searchTerms: `${passenger.firstName} ${passenger.lastName}`
+        }))
+        searchStore = createSearchStore(searchedPassengers);
+        unsubscribe = searchStore.subscribe(model => searchHandler(model))
+        sort_by("lastName")
+
+        updatePages();
+        loading = false;
     });
 
+    onDestroy(() => {
+        if (unsubscribe !== null) {
+            unsubscribe();
+        }
+    })
+
     function sort_by(attribute) {
-        if (attribute === current_sort_key) {
-            sort_dir *= -1;
-        } else {
-            sort_dir = 1;
+        for (let i = 0; i < titles.length; i++) {
+            if (titles[i].key==attribute) {
+                if (attribute === current_sort_key) {
+                    if (sort_dir < 0) {
+                        titles[i].state = "down"
+                    } else {
+                        titles[i].state = "up"
+                    }
+                    sort_dir *= -1;
+                } else {
+                    sort_dir = 1;
+                    titles[i].state = "down"
+                }
+            } else {
+                titles[i].state = "all"
+            }
+        }
+        $searchStore.data = $searchStore.data.sort((a, b) => (a["lastName"] < b["lastName"]) ? 1 : -1);
+        $searchStore.data = $searchStore.data.sort((a, b) => (a[attribute] > b[attribute]) ? sort_dir : -sort_dir);
+        
+        current_sort_key = attribute;
+    }
+    
+
+    function change_page(dir) {
+        if (0 <= page + dir && page + dir < $searchStore.data.length / pagination) {
+            page += dir
+            document.body.scrollIntoView();
+            updatePages();
+        }
+    }
+
+    function change_to_page(p) {
+        if (p != page) {
+            page = p
+            document.body.scrollIntoView();
+            updatePages();
+        }
+    }
+
+    function updatePages() {
+        let maxNumber = $searchStore.data.length / pagination;
+        let result = [];
+
+        if (maxNumber <= pagination) {
+            for (let i = 0; i < maxNumber; i++) {
+                result.push(i);
+            }
+            pages = result;
+            return result;
         }
 
-        passengers = passengers.sort((a, b) => (a[attribute] > b[attribute]) ? sort_dir : -sort_dir);
-        current_sort_key = attribute;
+        let start = Math.max(0, page - 2);
+        let end = Math.min(maxNumber, page + 2);
+
+        if (page <= 3) {
+            end = 5;
+        } else if (page >= maxNumber - 2) {
+            start = maxNumber - 4;
+        }
+
+        for (let i = start; i <= end; i++) {
+            result.push(i);
+        }
+
+        pages = result;
     }
 </script>
 
 <body>
     <div id='users' transition:fly={{ duration: 300, x: 100, easing: quintOut }}>
         <h1>Passengers</h1>
+
+        {#if !loading}
+        
+        
+<div id="table-container">
+    <div id="table">
+        <input type="search" placeholder="Search passenger" bind:value={$searchStore.search}>
         <table>
             <tr>
                 <th></th>
-                <th>Name<button on:click={()=>sort_by('firstName')}>s</button></th>
-                <th>Seat Number<button on:click={()=>sort_by('lastName')}>s</button></th>
-                <th>Age<button on:click={()=>sort_by('age')}>s</button></th>
-                <th>Gender<button on:click={()=>sort_by('gender')}>s</button></th>
-                <th>Weight<button on:click={()=>sort_by('weight(kg)')}>s</button></th>
-                <th>Height<button on:click={()=>sort_by('height(cm)')}>s</button></th>
+                
+                {#each titles as data}
+                <th>
+                    <div id="table-header">
+                        <div id="table-title">{data.name}</div>
+                        <SortingIcon 
+                            onClickFunction={()=>sort_by(data.key)}
+                            bind:data={data}
+                        /> 
+                    </div>
+                </th>
+                {/each}
             </tr>
     
-            {#each passengers as passenger}
+            {#each $searchStore.filtered.slice(page*pagination, (page+1)*pagination) as passenger}
             <tr>
                 <td id="img-container"><img src={passenger.avatar} alt="passanger"></td>
                 <td>{passenger.firstName} {passenger.lastName}</td>
@@ -57,6 +160,20 @@
             </tr>
             {/each}
         </table>
+            
+        <div class="pagination">
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a href={page==0? "#/":"#"} on:click={()=>change_page(-1)}>&laquo;</a>
+            {#each pages as index}
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a href={page==index? "#/":"#"} class={index==page ? "active" : ""} on:click={()=>change_to_page(index)}>{index+1}</a>
+            {/each}
+            <!-- svelte-ignore a11y-invalid-attribute -->
+            <a href="#"  on:click={()=>change_page(1)}>&raquo;</a>
+        </div>
+    </div>
+</div>
+        {/if}
     </div>
 </body>
 
@@ -157,28 +274,14 @@
         justify-content: center;
     }
 
-    #page {
-        display: flex;
-        justify-content: center;
-
-        height: 2rem;
-        padding-top: 0.5rem;
-        padding-bottom: 1rem;
-    }
-
-    .page-number {
-        margin-right: 6px;
-    }
-
-    .current-page {
-        font-weight: bolder;
-    }
-
     input {
         border: 0px;
         width: 100%;
         max-width: 50rem;
         margin-bottom: 1rem;
     }
+
+    
+    
 
 </style>
