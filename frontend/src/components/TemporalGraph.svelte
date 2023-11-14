@@ -7,7 +7,17 @@
 
     let data = []
     let year = "";
-    let flight_class = "";
+    let characteristics = "distance";
+    let chars_Titles = {
+        "distance": "Total Distance Traveled per Month",
+        "weight": "Total Weight Transported per Month",
+        "height": "Average Passenger Height per Month"
+    }
+    let chars_units = {
+        "distance": "km",
+        "weight": "kg",
+        "height": "cm"
+    }
 
     let loading = false;
     let chartDom;
@@ -24,27 +34,40 @@
         };
 
         const option = {
-            tooltip: {
-                trigger: 'item'
+            xAxis: {
+                type: 'category',
+                nameLocation: 'center',
+                nameGap: 60,
+                name: 'month',
+                data: data.map( item => item.month),
+                axisLabel: {
+                    show: true,
+                    interval: 0,
+                    rotate: 45,
+                },
             },
-            legend: {
-                orient: 'vertical',
-                type: 'scroll',
-                left: 'left'
+            yAxis: {
+                type: 'value',
+                nameLocation: 'center',
+                nameGap: 50,
+                name: `${characteristics} (${chars_units[characteristics]})`,
             },
             series: [{
-                type: 'pie',
-                radius: '50%',
-                center: ['50%', '60%'], // Adjust the y-coordinate to align to the bottom
-                data: data,
-                emphasis: {
-                    itemStyle: {
-                    shadowBlur: 10,
-                    shadowOffsetX: 0,
-                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                    }
+                data: data.map( item => item.value),
+                type: 'bar'
+            }],
+            grid: {containLabel: true, left: 25, bottom: 30},
+            tooltip: {
+                trigger: 'axis',
+                confine: true,
+                axisPointer: {
+                    type: 'shadow'
+                },
+                formatter: function (params) {
+                    const data = params[0]
+                    return `month: ${data.axisValue}<br>${characteristics}: ${Math.round(data.data * 100) / 100} (${chars_units[characteristics]})`
                 }
-            }]
+            },
         };
         option && myChart.setOption(option);
     }
@@ -52,23 +75,15 @@
     async function fetchData() {
         loading = true;
 
-        let url = PUBLIC_BASE_URL + "/vuelos_cantidad_data?"
+        let url = PUBLIC_BASE_URL + "/temporal_data?"
         if (year) {
             url += `&year=${year}`
         }
-        if (flight_class) {
-            url += `&flight_class=${flight_class}`
+        if (characteristics) {
+            url += `&characteristics=${characteristics}`
         }
         const response = await fetch(url);
-        const flights = await response.json();
-
-        data = []
-        flights.forEach(flight => {
-            data.push({
-                name: flight['airline'],
-                value: flight['total_passengers']
-            })
-        });
+        data = await response.json();
 
         loading = false;
         showGraph();
@@ -77,7 +92,7 @@
 
 <main>
     <div id="graph-container">
-        <div id="title">Number of Flights per Airline</div>
+        <div id="title">{chars_Titles[characteristics]}</div>
         <div id="options-container">
             <div id="options">
                 <label for="option">Year</label>
@@ -88,12 +103,11 @@
                     {/each}
                 </select>
                 
-                <label for="option">Type of Seats</label>
-                <select name="characteristic" id="characteristic" bind:value={flight_class} on:change={fetchData}>
-                    <option value="">-</option>
-                    <option value="first class">first class</option>
-                    <option value="economy">economy</option>
-                    <option value="bussines">business</option>
+                <label for="option">Characteristic</label>
+                <select name="characteristic" id="characteristic" bind:value={characteristics} on:change={fetchData}>
+                    <option value="distance">Total Distance</option>
+                    <option value="weight">Total Weight</option>
+                    <option value="height">Average Height</option>
                 </select>
             </div>
         </div>
