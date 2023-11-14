@@ -27,13 +27,33 @@ def spanish_to_english_date(d):
 
 def optimize_files():
     # Convert YAML to JSON
-    print('converting yaml to json')
-    with open(f'downloads/passengers.yaml', 'r') as file:
-        yaml_data = yaml.load(file, Loader=yaml.CBaseLoader)
+    print('convert yaml to json')
+    all_data = {
+        "passengers": []
+    }
+
+    with open('downloads/passengers.yaml') as file:
+        data = file.readlines()
+
+        for i in range(int((len(data)-1)/8)):
+            if i % 1000 == 0:
+                print(i)
+
+            all_data["passengers"].append({
+                "passengerID": data[i*8+1].strip().replace('"','').replace("- passengerID: ", ""),
+                "firstName": data[i*8+2].strip().replace('"','').replace("firstName: ", ""),
+                "lastName": data[i*8+3].strip().replace('"','').replace("lastName: ", ""),
+                "birthDate": data[i*8+4].strip().replace('"','').replace("birthDate: ", ""),
+                "gender": data[i*8+5].strip().replace('"','').replace("gender: ", ""),
+                "height(cm)": data[i*8+6].strip().replace('"','').replace("height(cm): ", ""),
+                "weight(kg)": data[i*8+7].strip().replace('"','').replace("weight(kg): ", ""),
+                "avatar": data[i*8+8].strip().replace('"','').replace("avatar: ", ""),
+            })
 
     print('saving as json')
-    with open(f'downloads/passengers.json', 'w') as json_file:
-        json.dump(yaml_data, json_file)
+    with open('downloads/passengers.json', 'w') as file:
+        json.dump(all_data, file)
+
         
     ## ALL FLIGHTS TO ONE FILE
     print("merging flights")
