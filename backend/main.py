@@ -1,11 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from google.cloud import storage
-import os
 import pandas as pd
-import yaml
-import json
 
 from downloader import download_files
 from files_optimizer import optimize_files
@@ -23,66 +19,10 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-
-# @app2.task
-# def download_gcs_file(bucket_name, file_name, destination_file_name):
-#     storage_client = storage.Client()
-
-#     bucket = storage_client.bucket(bucket_name)
-
-#     blob = bucket.blob(file_name)
-
-#     dirname = os.path.dirname(destination_file_name)
-#     if dirname and not os.path.isdir(dirname):
-#         os.makedirs(dirname)
-
-#     print('Downloading',file_name)
-#     with open(destination_file_name, 'wb') as file_obj:
-#         blob.download_to_file(file_obj)
-
-#     if '.yaml' in file_name:
-#         # Convert YAML to JSON
-#         with open(f'{APP_FOLDER}/downloads/{file_name}', 'r') as file:
-#             yaml_data = yaml.load(file, Loader=yaml.Loader)
-
-#         with open(f'{APP_FOLDER}/downloads/{file_name}'.replace('yaml', 'json'), 'w') as json_file:
-#             json.dump(yaml_data, json_file)
-
-#     print("done :)")
-#     return True
-
-# async def download_files():
-#     print("Downloading files")
-#     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = f'{APP_FOLDER}/private_key.json'
-
-#     bucket_name = "2023-2-tarea3"
-
-#     files = [
-#         'aircrafts.xml',
-#         'airports.csv',
-#         'passengers.yaml',
-#         'tickets.csv'
-#     ]
-
-#     for year in [i for i in range(2015, 2024)]:
-#         for month in [i for i in range(1, 13)]:
-#             files.append(f'flights/{year}/{month:02}/flight_data.json')
-
-#     for file_name in files:
-#         print("Starting", file_name)
-#         download_gcs_file(bucket_name, file_name, f'{APP_FOLDER}/downloads/{file_name}')
-
-# async def run_download_files():
-#     print("Starting download.")
-#     await download_files()
-
 @app.get("/download_files")
 def download_files_endpoint(background_tasks: BackgroundTasks):
     download_files()
     optimize_files()
-
-    # background_tasks.add_task(download_files)
-    # await run_download_files()
     return {"message": "Files downloaded."}
 
 @app.get("/")
@@ -177,6 +117,58 @@ def vuelo(flight_number: int):
         'passengers': passengers,
     }
 
+@app.get("/temporal_data")
+def temporal_data(year: int = None, characteristics: str = ""):
+    if characteristics not in ['distance', 'weight', 'height']:
+        return {'error': 'characteristics needs to be distance, weight or height'}
+    
+    # read flights
+    flights = pd.read_json('downloads/flights.json')
+    if year != None:
+        flights = flights[flights['year'] == year]
+
+    months = [
+        "January", "February", "March",
+        "April", "May", "June",
+        "July", "August", "September",
+        "October", "November", "December"
+    ]
+
+    if characteristics == "distance":
+        # read airports
+        airports = pd.read_csv(f'{APP_FOLDER}/downloads/airports.csv', on_bad_lines='skip')
+        flights = pd.merge(flights, airports, left_on="originIATA", right_on="airportIATA")
+        flights = flights.rename(columns={"country":"origin"})
+        flights = pd.merge(flights, airports, left_on="destinationIATA", right_on="airportIATA")
+        flights = flights.rename(columns={"country":"destination"})
+
+        # total distance
+        flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
+        flights = flights[['distance', 'month']].groupby('month').sum().reset_index().rename(columns={"distance": "value"})
+        
+        flights['month'] = flights['month'].apply(lambda x: months[x-1])
+
+        return flights.to_dict('records')
+    else:
+        with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
+            tickets = pd.read_csv(f)
+            tickets['passengerID']=tickets['passengerID'].astype(int)
+
+        # read passengers
+        passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
+
+        passengers = pd.merge(tickets,passengers, on="passengerID")
+        flights = pd.merge(flights, passengers, on="flightNumber")
+        print(flights.columns)
+        if characteristics == "weight":
+            flights = flights[['month', 'weight(kg)']].groupby('month').mean().reset_index().rename(columns={"weight(kg)": "value"})
+            flights['month'] = flights['month'].apply(lambda x: months[x-1])
+            return flights.to_dict('records')
+        elif characteristics == "height":
+            flights = flights[['month', 'height(cm)']].groupby('month').mean().reset_index().rename(columns={"height(cm)": "value"})
+            flights['month'] = flights['month'].apply(lambda x: months[x-1])
+            return flights.to_dict('records')
+
 @app.get("/vuelos_cantidad_data/")
 def data_cantidad(year: int = None, flight_class: str = None):
     # read flights
@@ -202,8 +194,10 @@ def data_poblacion(year: int = None):
     # read flights
     flights = pd.read_json('downloads/flights.json')
     if year != None:
+        print("DSFIHPSDOIUFHDSIOF", year)
+        print(len(flights))
         flights = flights[flights['year'] == year]
-
+        print(len(flights))
     # read tickets  
     with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
         tickets = pd.read_csv(f)
@@ -212,9 +206,10 @@ def data_poblacion(year: int = None):
 
     # read passengers
     passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
-    
-    all_age_values = pd.DataFrame({'age': range(1, 100)})
+    passengers = passengers[passengers['passengerID'].isin(tickets['passengerID'])]
+    print(len(passengers))
 
+    all_age_values = pd.DataFrame({'age': range(1, 100)})
 
     males = passengers[passengers['gender'] == 'male'].groupby('age').count().reset_index()[['age','passengerID']]
     males = males.rename(columns={'passengerID': 'qty'})
@@ -233,5 +228,4 @@ def data_poblacion(year: int = None):
         'males': males,
         'females': females,
     }
-    print(ret_data)
     return ret_data
