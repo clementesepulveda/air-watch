@@ -13,6 +13,7 @@
 
     let page = 0;
     let pagination = 15;
+    let pages = []
 
     let current_sort_key = "";
     let sort_dir = 1;
@@ -28,6 +29,28 @@
     ]
 
     let loading = true;
+
+    onMount(async () => {
+        loading = true;
+
+        const response = await fetch(PUBLIC_BASE_URL+"/vuelos");
+        const vuelos = await response.json();
+        searchedFlights = vuelos.map( vuelo => ({
+            ...vuelo,
+            searchTerms: `${vuelo.city_x} ${vuelo.destination} ${vuelo.city_y} ${vuelo.origin}`
+        }))
+        searchStore = createSearchStore(searchedFlights);
+        unsubscribe = searchStore.subscribe(model => searchHandler(model))
+        sort_by("year")
+        updatePages();
+        loading = false;
+    });
+
+    onDestroy(() => {
+        if (unsubscribe !== null) {
+            unsubscribe();
+        }
+    })
 
     function sort_by(attribute) {
         for (let i = 0; i < titles.length; i++) {
@@ -48,47 +71,58 @@
             }
         }
 
-        $searchStore.data = $searchStore.data.sort((a, b) => (a["flightNumber"] > b["flightNumber"]) ? sort_dir : -sort_dir);
-        $searchStore.data = $searchStore.data.sort((a, b) => (a["month"] > b["month"]) ? sort_dir : -sort_dir);
-        $searchStore.data = $searchStore.data.sort((a, b) => (a["year"] > b["year"]) ? sort_dir : -sort_dir);
+        $searchStore.data = $searchStore.data.sort((a, b) => (a["flightNumber"] > b["flightNumber"]) ? 1 : -1);
+        $searchStore.data = $searchStore.data.sort((a, b) => (a["month"] > b["month"]) ? 1 : -1);
+        $searchStore.data = $searchStore.data.sort((a, b) => (a["year"] > b["year"]) ? 1 : -1);
         $searchStore.data = $searchStore.data.sort((a, b) => (a[attribute] > b[attribute]) ? sort_dir : -sort_dir);
 
         current_sort_key = attribute;
     }
 
     function change_page(dir) {
+        console.log(page)
         if (0 <= page + dir && page + dir < $searchStore.data.length / pagination) {
             page += dir
+            document.body.scrollIntoView();
+            updatePages();
         }
-        document.body.scrollIntoView();
     }
 
     function change_to_page(p) {
-        page = p
-        document.body.scrollIntoView();
+        if (p != page) {
+            page = p
+            document.body.scrollIntoView();
+            updatePages();
+        }
     }
 
-    onMount(async () => {
-        loading = true;
+    function updatePages() {
+        let maxNumber = $searchStore.data.length / pagination;
+        let result = [];
 
-        const response = await fetch(PUBLIC_BASE_URL+"/vuelos");
-        const vuelos = await response.json();
-        searchedFlights = vuelos.map( vuelo => ({
-            ...vuelo,
-            searchTerms: `${vuelo.city_x} ${vuelo.destination} ${vuelo.city_y} ${vuelo.origin}`
-        }))
-        searchStore = createSearchStore(searchedFlights);
-        unsubscribe = searchStore.subscribe(model => searchHandler(model))
-        sort_by("year")
-
-        loading = false;
-    });
-
-    onDestroy(() => {
-        if (unsubscribe !== null) {
-            unsubscribe();
+        if (maxNumber <= pagination) {
+            for (let i = 0; i < maxNumber; i++) {
+                result.push(i);
+            }
+            pages = result;
+            return result;
         }
-    })
+
+        let start = Math.max(0, page - 2);
+        let end = Math.min(maxNumber, page + 2);
+
+        if (page <= 3) {
+            end = 5;
+        } else if (page >= maxNumber - 2) {
+            start = maxNumber - 4;
+        }
+
+        for (let i = start; i <= end; i++) {
+            result.push(i);
+        }
+
+        pages = result;
+    }
 
 </script>
 
@@ -134,18 +168,16 @@
                 </tr>
                 {/each}
             </table>
-            <div id="page">
-                <button on:click={()=>change_page(-1)}>left</button>
-                {#each Array.from({length: 10}, (_, i) => i + page - 5).filter(v=> v >= 0) as page_number}
-                    <!-- svelte-ignore a11y-click-events-have-key-events -->
-                    <!-- svelte-ignore a11y-no-static-element-interactions -->
-                    {#if page_number===page}
-                        <div on:click={()=>change_to_page(page_number)} class="current-page page-number">{page_number+1}</div>
-                    {:else}
-                        <div on:click={()=>change_to_page(page_number)} class="page-number">{page_number+1}</div>
-                    {/if}
+            
+            <div class="pagination">
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a href={page==0? "#/":"#"} on:click={()=>change_page(-1)}>&laquo;</a>
+                {#each pages as index}
+                    <!-- svelte-ignore a11y-invalid-attribute -->
+                    <a href={page==index? "#/":"#"} class={index==page ? "active" : ""} on:click={()=>change_to_page(index)}>{index+1}</a>
                 {/each}
-                <button on:click={()=>change_page(1)}>right</button>
+                <!-- svelte-ignore a11y-invalid-attribute -->
+                <a href="#"  on:click={()=>change_page(1)}>&raquo;</a>
             </div>
         {/if}
     </div>
@@ -226,23 +258,6 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-    }
-
-    #page {
-        display: flex;
-        justify-content: center;
-
-        height: 2rem;
-        padding-top: 0.5rem;
-        padding-bottom: 1rem;
-    }
-
-    .page-number {
-        margin-right: 6px;
-    }
-
-    .current-page {
-        font-weight: bolder;
     }
 
     input {
