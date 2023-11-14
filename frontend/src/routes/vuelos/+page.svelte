@@ -16,16 +16,41 @@
 
     let current_sort_key = "";
     let sort_dir = 1;
+    let titles = [ // state = "both", "up", "down"
+        {name: "Flight Number", key:"flightNumber", state:"all"} ,
+        {name: "Origin", key:"origin", state:"all"} ,
+        {name: "Destination", key:"destination", state:"all"} ,
+        {name: "Airline", key:"airline", state:"all"} ,
+        {name: "Avg Age", key:"averageAge", state:"all"} ,
+        {name: "Total Distance", key:"distance", state:"all"} ,
+        {name: "Plane", key:"aircraftName", state:"all"} ,
+        {name: "No. Passengers", key:"passengersQty", state:"all"},
+    ]
 
     let loading = true;
 
     function sort_by(attribute) {
-        if (attribute === current_sort_key) {
-            sort_dir *= -1;
-        } else {
-            sort_dir = 1;
+        for (let i = 0; i < titles.length; i++) {
+            if (titles[i].key==attribute) {
+                if (attribute === current_sort_key) {
+                    if (sort_dir < 0) {
+                        titles[i].state = "down"
+                    } else {
+                        titles[i].state = "up"
+                    }
+                    sort_dir *= -1;
+                } else {
+                    sort_dir = 1;
+                    titles[i].state = "down"
+                }
+            } else {
+                titles[i].state = "all"
+            }
         }
 
+        $searchStore.data = $searchStore.data.sort((a, b) => (a["flightNumber"] > b["flightNumber"]) ? sort_dir : -sort_dir);
+        $searchStore.data = $searchStore.data.sort((a, b) => (a["month"] > b["month"]) ? sort_dir : -sort_dir);
+        $searchStore.data = $searchStore.data.sort((a, b) => (a["year"] > b["year"]) ? sort_dir : -sort_dir);
         $searchStore.data = $searchStore.data.sort((a, b) => (a[attribute] > b[attribute]) ? sort_dir : -sort_dir);
 
         current_sort_key = attribute;
@@ -54,6 +79,7 @@
         }))
         searchStore = createSearchStore(searchedFlights);
         unsubscribe = searchStore.subscribe(model => searchHandler(model))
+        sort_by("year")
 
         loading = false;
     });
@@ -77,18 +103,20 @@
                 <SyncLoader color="#F8F8F8"/>
             </div>
         {:else}
+            <input type="search" placeholder="Search city" bind:value={$searchStore.search}>
             <table>
-                <input type="search" placeholder="Search city" bind:value={$searchStore.search}>
-
                 <tr id="table-titles">
-                    <th>Flight Number <SortingIcon/> </th>
-                    <th>Origin  <SortingIcon/> </th>
-                    <th>Destination <button on:click={()=>sort_by('destination')}>s</button></th>
-                    <th>Airline <button on:click={()=>sort_by('airline')}>s</th>
-                    <th>Avg Age <button on:click={()=>sort_by('averageAge')}>s</th>
-                    <th>Total Distance <button on:click={()=>sort_by('dist_recorrida')}>s</th>
-                    <th>Plane <button on:click={()=>sort_by('aircraftName')}>s</th>
-                    <th>#Passengers <button on:click={()=>sort_by('passengersQty')}>s</th>
+                    {#each titles as data}
+                        <th>
+                            <div id="table-header">
+                                <div id="table-title">{data.name}</div>
+                                <SortingIcon 
+                                    onClickFunction={()=>sort_by(data.key)}
+                                    bind:data={data}
+                                /> 
+                            </div>
+                        </th>
+                    {/each}
                 </tr>
         
                 {#each $searchStore.filtered.slice(page*pagination, (page+1)*pagination) as vuelo}
@@ -152,11 +180,12 @@
 
         padding: 1rem;
         width: 100%;
-        /* max-width:fit-content; */
+
+        max-width: fit-content;
     }
 
     table {
-        margin: 1rem 1rem;
+        margin: 0rem 0;
 
         font-family: arial, sans-serif;
         border-collapse: collapse;
@@ -177,32 +206,27 @@
         border-bottom: 1px solid #8689A2;
         color: white;
         
-        /* width: 1000px; */
         white-space: nowrap;
-        /* display: flex; */
         align-items: center;
         justify-content: space-between;
-        /* max-width: 100px;
-        overflow: hidden;
-        white-space: nowrap; */
     }
 
     td {
         border-top: 1px solid #8689A2;
         
-        /* width: 1000px; */
         max-width: 1000px;
         overflow: hidden;
-        /* white-space: nowrap; */
         vertical-align: top;
         text-align: left;
     }
-    
-    #table-titles :nth-child(0) {
-        width: 4rem;
-        overflow-wrap: break-word;
-        overflow: hidden;
-        background-color: rgba(150, 212, 212, 0.4);
+
+    #table-header {
+        display: flex;
+    }
+    #table-title {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     #page {
