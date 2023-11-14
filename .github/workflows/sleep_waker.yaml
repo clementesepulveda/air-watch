@@ -1,4 +1,4 @@
-name: back-wake
+name: wake-up
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  call-frontend:
+  call-sleeping-process:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
