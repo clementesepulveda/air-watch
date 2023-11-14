@@ -37,6 +37,8 @@
 		"@amcharts/amcharts5-geodata": "^5.1.1",
 		"chart.js": "^4.4.0",
 		"echarts": "^5.4.3",
+		"flowbite-svelte": "^0.44.19",
+		"flowbite-svelte-icons": "^0.4.5",
 		"svelte-loading-spinners": "^0.3.4"
 	}
 }
