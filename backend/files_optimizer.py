@@ -29,8 +29,9 @@ def optimize_files():
     # Convert YAML to JSON
     print('converting yaml to json')
     with open(f'downloads/passengers.yaml', 'r') as file:
-        yaml_data = yaml.load(file, Loader=yaml.Loader)
+        yaml_data = yaml.load(file, Loader=yaml.CBaseLoader)
 
+    print('saving as json')
     with open(f'downloads/passengers.json', 'w') as json_file:
         json.dump(yaml_data, json_file)
         
