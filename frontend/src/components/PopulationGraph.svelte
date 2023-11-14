@@ -107,6 +107,7 @@
                     end: 100
                 },
             ],
+            grid: {containLabel: true, left: 25, bottom: 15},
             
         };
         option && myChart.setOption(option);
