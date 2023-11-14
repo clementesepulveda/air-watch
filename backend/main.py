@@ -159,7 +159,7 @@ def temporal_data(year: int = None, characteristics: str = ""):
 
         passengers = pd.merge(tickets,passengers, on="passengerID")
         flights = pd.merge(flights, passengers, on="flightNumber")
-        print(flights.columns)
+
         if characteristics == "weight":
             flights = flights[['month', 'weight(kg)']].groupby('month').mean().reset_index().rename(columns={"weight(kg)": "value"})
             flights['month'] = flights['month'].apply(lambda x: months[x-1])
@@ -194,10 +194,8 @@ def data_poblacion(year: int = None):
     # read flights
     flights = pd.read_json('downloads/flights.json')
     if year != None:
-        print("DSFIHPSDOIUFHDSIOF", year)
-        print(len(flights))
         flights = flights[flights['year'] == year]
-        print(len(flights))
+
     # read tickets  
     with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
         tickets = pd.read_csv(f)
@@ -207,7 +205,6 @@ def data_poblacion(year: int = None):
     # read passengers
     passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
     passengers = passengers[passengers['passengerID'].isin(tickets['passengerID'])]
-    print(len(passengers))
 
     all_age_values = pd.DataFrame({'age': range(1, 100)})
 
@@ -216,7 +213,6 @@ def data_poblacion(year: int = None):
     males = pd.merge(all_age_values, males, on='age', how='left')
     males['qty'].fillna(0, inplace=True)
     males = males.set_index('age')['qty'].to_dict()
-    print()
 
     females = passengers[passengers['gender'] == 'female'].groupby('age').count().reset_index()[['age','passengerID']]
     females = females.rename(columns={'passengerID': 'qty'})
