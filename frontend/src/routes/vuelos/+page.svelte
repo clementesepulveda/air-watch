@@ -192,7 +192,6 @@
 
         display: block;
         overflow-x: auto;
-        table-layout: fixed; 
         table-layout: fixed;
     }
     
@@ -251,5 +250,51 @@
         width: 100%;
         max-width: 50rem;
         margin-bottom: 1rem;
+    }
+    
+    th:nth-child(0), td:nth-child(0) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
+    }
+    th:nth-child(1), td:nth-child(1) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
+    }
+    th:nth-child(2), td:nth-child(2) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
+    }
+    th:nth-child(3), td:nth-child(3) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
+    }
+    th:nth-child(4), td:nth-child(4) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
+    }
+    th:nth-child(5), td:nth-child(5) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
+    }
+    th:nth-child(6), td:nth-child(6) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
+    }
+    th:nth-child(7), td:nth-child(7) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
+    }
+    th:nth-child(8), td:nth-child(8) {
+        min-width: 149px; /* Set a fixed width for the first column */
+        max-width: 150px; /* Set a fixed width for the first column */
+        word-wrap: break-word; /* Allow content to break within the max-width */
     }
 </style>
