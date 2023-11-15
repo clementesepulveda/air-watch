@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import pandas as pd
 
+import os
+
 from downloader import download_files
 from files_optimizer import optimize_files
 
@@ -45,6 +47,8 @@ def vuelos():
 
     # # read airports
     # # TODO, some lines have , in them. 
+    print(os.listdir('downloads'))
+    
     airports = pd.read_csv(f'{APP_FOLDER}/downloads/airports.csv', on_bad_lines='skip')
     flights = pd.merge(flights, airports, left_on="originIATA", right_on="airportIATA")
     flights = flights.rename(columns={"country":"origin"})
