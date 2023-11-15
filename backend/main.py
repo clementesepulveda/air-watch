@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import pandas as pd
 
-import os
+import time
 
 from downloader import download_files
 from files_optimizer import optimize_files
@@ -37,17 +37,16 @@ async def favicon():
 
 @app.get("/vuelos")
 def vuelos():
+    debug_timer = time.time()
     # read flights
     flights = pd.read_json('downloads/flights.json')
 
+    print('read flights', time.time()- debug_timer)
+    debug_timer = time.time()
     # # read aircrafts
     aircrafts = pd.read_xml(f'{APP_FOLDER}/downloads/aircrafts.xml')
     aircrafts = aircrafts.rename(columns={"name":"aircraftName"})
     flights = pd.concat([flights, aircrafts], axis=1, join="inner")
-
-    # # read airports
-    # # TODO, some lines have , in them. 
-    print(os.listdir('downloads'))
     
     airports = pd.read_csv(f'{APP_FOLDER}/downloads/airports.csv', on_bad_lines='skip')
     flights = pd.merge(flights, airports, left_on="originIATA", right_on="airportIATA")
@@ -55,11 +54,15 @@ def vuelos():
     flights = pd.merge(flights, airports, left_on="destinationIATA", right_on="airportIATA")
     flights = flights.rename(columns={"country":"destination"})
 
+    print('read aircrafts', time.time()- debug_timer)
+    debug_timer = time.time()
     # read tickets  
     with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
         tickets = pd.read_csv(f)
         tickets['passengerID']=tickets['passengerID'].astype(int)
 
+    print('read ticketes', time.time()- debug_timer)
+    debug_timer = time.time()
     # read passengers
     passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
 
@@ -71,9 +74,12 @@ def vuelos():
     
     flights = pd.merge(flights, passengers, on="flightNumber")
 
+    print('read passengers', time.time()- debug_timer)
+    debug_timer = time.time()
     # total distance
     flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
 
+    print('read distante', time.time()- debug_timer)
     return flights.to_dict('records')
 
 @app.get("/vuelo/{flight_number}")
