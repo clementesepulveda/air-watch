@@ -37,6 +37,7 @@ async def favicon():
 
 @app.get("/vuelos")
 def vuelos():
+    total_time = time.time()
     debug_timer = time.time()
     # read flights
     flights = pd.read_json('downloads/flights.json')
@@ -80,7 +81,13 @@ def vuelos():
     flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
 
     print('read distante', time.time()- debug_timer)
-    return flights.to_dict('records')
+    debug_timer = time.time()
+
+    flights = flights.to_dict('records')
+    print('flights to json', time.time()- debug_timer)
+    print('TOTAL TIME', time.time() - total_time)
+    return flights
+    
 
 @app.get("/vuelo/{flight_number}")
 def vuelo(flight_number: int):
