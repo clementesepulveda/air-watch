@@ -71,8 +71,8 @@ def vuelos():
     # print('read tickets', time.time()- debug_timer)
     # debug_timer = time.time()
     # read passengers
-    for _ in range(TIMES_TO_RUN):
-        passengers = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
+    # for _ in range(TIMES_TO_RUN):
+    #     passengers = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
         # passengers = pd.read_json(f'{APP_FOLDER}/downloads/passengers.json')
 
     # print('read passengers.h5', time.time()- debug_timer)
