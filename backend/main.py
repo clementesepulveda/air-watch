@@ -47,7 +47,7 @@ def vuelos():
     # print('read flights', time.time()- debug_timer)
     # debug_timer = time.time()
     # # read aircrafts
-    STARTING_FLIGHTS = flights.copy()
+    # STARTING_FLIGHTS = flights.copy()
     for _ in range(TIMES_TO_RUN):
         aircrafts = pd.read_hdf(f'downloads/optimized_files/aircrafts.h5','df')
         flights = pd.concat([flights, aircrafts], axis=1, join="inner")
@@ -56,7 +56,7 @@ def vuelos():
     # debug_timer = time.time()
     for _ in range(TIMES_TO_RUN):
         airports = pd.read_hdf(f'downloads/optimized_files/airports.h5', 'df')
-        flights = STARTING_FLIGHTS.copy()
+        # flights = STARTING_FLIGHTS.copy()
         flights = pd.merge(flights, airports, left_on="originIATA", right_on="airportIATA")
         flights = flights.rename(columns={"country":"origin"})
         flights = pd.merge(flights, airports, left_on="destinationIATA", right_on="airportIATA")
@@ -97,10 +97,10 @@ def vuelos():
 
     # print('read distante', time.time()- debug_timer)
 
-    STARTING_FLIGHTS = flights.copy()
-    # debug_timer = time.time()
+    # STARTING_FLIGHTS = flights.copy()
+    debug_timer = time.time()
     for _ in range(TIMES_TO_RUN):
-        flights = STARTING_FLIGHTS.copy()
+        # flights = STARTING_FLIGHTS.copy()
         flights = flights.to_dict('records')
     # print('flights to dict', time.time()- debug_timer)
 
