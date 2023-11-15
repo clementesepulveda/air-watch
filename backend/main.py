@@ -37,54 +37,73 @@ async def favicon():
 
 @app.get("/vuelos")
 def vuelos():
+    TIMES_TO_RUN = 1
     total_time = time.time()
     debug_timer = time.time()
     # read flights
-    flights = pd.read_json('downloads/flights.json')
+    for _ in range(TIMES_TO_RUN):
+        flights = pd.read_hdf('downloads/optimized_files/flights.h5', 'df')
 
-    print('read flights', time.time()- debug_timer)
+    # print('read flights', time.time()- debug_timer)
     debug_timer = time.time()
     # # read aircrafts
-    aircrafts = pd.read_xml(f'{APP_FOLDER}/downloads/aircrafts.xml')
-    aircrafts = aircrafts.rename(columns={"name":"aircraftName"})
-    flights = pd.concat([flights, aircrafts], axis=1, join="inner")
+    STARTING_FLIGHTS = flights.copy()
+    for _ in range(TIMES_TO_RUN):
+        aircrafts = pd.read_hdf(f'downloads/optimized_files/aircrafts.h5','df')
+        flights = pd.concat([flights, aircrafts], axis=1, join="inner")
     
-    airports = pd.read_csv(f'{APP_FOLDER}/downloads/airports.csv', on_bad_lines='skip')
-    flights = pd.merge(flights, airports, left_on="originIATA", right_on="airportIATA")
-    flights = flights.rename(columns={"country":"origin"})
-    flights = pd.merge(flights, airports, left_on="destinationIATA", right_on="airportIATA")
-    flights = flights.rename(columns={"country":"destination"})
+    # print('read aircrafts', time.time()- debug_timer)
+    debug_timer = time.time()
+    for _ in range(TIMES_TO_RUN):
+        airports = pd.read_hdf(f'downloads/optimized_files/airports.h5', 'df')
+        flights = STARTING_FLIGHTS.copy()
+        flights = pd.merge(flights, airports, left_on="originIATA", right_on="airportIATA")
+        flights = flights.rename(columns={"country":"origin"})
+        flights = pd.merge(flights, airports, left_on="destinationIATA", right_on="airportIATA")
+        flights = flights.rename(columns={"country":"destination"})
 
-    print('read aircrafts', time.time()- debug_timer)
+    # print('merge airports', time.time()- debug_timer)
     debug_timer = time.time()
     # read tickets  
-    with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
-        tickets = pd.read_csv(f)
-        tickets['passengerID']=tickets['passengerID'].astype(int)
+    for _ in range(TIMES_TO_RUN):
+        tickets = pd.read_hdf('downloads/optimized_files/tickets.h5','df')
 
-    print('read ticketes', time.time()- debug_timer)
+    # print('read tickets', time.time()- debug_timer)
     debug_timer = time.time()
     # read passengers
-    passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
+    for _ in range(TIMES_TO_RUN):
+        passengers = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
+        # passengers = pd.read_json(f'{APP_FOLDER}/downloads/passengers.json')
 
-    passengers = pd.merge(tickets,passengers, on="passengerID")
-    passengers = passengers.groupby('flightNumber')['age'].agg(['sum','count'])
-    passengers['averageAge'] = passengers['sum'] / passengers['count']
-    passengers = passengers.rename(columns={"count":"passengersQty"})
-    passengers = passengers.reset_index()
-    
-    flights = pd.merge(flights, passengers, on="flightNumber")
+    # print('read passengers.h5', time.time()- debug_timer)
 
-    print('read passengers', time.time()- debug_timer)
+    # debug_timer = time.time()
+    # STARTING_PASS = tickets.copy()
+    # for _ in range(TIMES_TO_RUN):
+    #     tickets = STARTING_PASS.copy()
+    #     tickets = pd.merge(tickets,passengers, on="passengerID")
+    #     tickets = tickets.groupby('flightNumber')['age'].agg(['sum','count'])
+    #     tickets['averageAge'] = tickets['sum'] / tickets['count']
+    #     tickets = tickets.rename(columns={"count":"passengersQty"})
+    #     tickets = tickets.reset_index()
+        
+    flights = pd.merge(flights, tickets, on="flightNumber")
+    # print('merge tickets', time.time()- debug_timer)
+
     debug_timer = time.time()
     # total distance
-    flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
+    for _ in range(TIMES_TO_RUN):
+        flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
 
-    print('read distante', time.time()- debug_timer)
+    # print('read distante', time.time()- debug_timer)
+
+    STARTING_FLIGHTS = flights.copy()
     debug_timer = time.time()
+    for _ in range(TIMES_TO_RUN):
+        flights = STARTING_FLIGHTS.copy()
+        flights = flights.to_dict('records')
+    # print('flights to dict', time.time()- debug_timer)
 
-    flights = flights.to_dict('records')
-    print('flights to json', time.time()- debug_timer)
     print('TOTAL TIME', time.time() - total_time)
     return flights
     
