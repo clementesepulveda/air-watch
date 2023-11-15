@@ -39,13 +39,13 @@ async def favicon():
 def vuelos():
     TIMES_TO_RUN = 1
     total_time = time.time()
-    debug_timer = time.time()
+    # debug_timer = time.time()
     # read flights
     for _ in range(TIMES_TO_RUN):
         flights = pd.read_hdf('downloads/optimized_files/flights.h5', 'df')
 
     # print('read flights', time.time()- debug_timer)
-    debug_timer = time.time()
+    # debug_timer = time.time()
     # # read aircrafts
     STARTING_FLIGHTS = flights.copy()
     for _ in range(TIMES_TO_RUN):
@@ -53,7 +53,7 @@ def vuelos():
         flights = pd.concat([flights, aircrafts], axis=1, join="inner")
     
     # print('read aircrafts', time.time()- debug_timer)
-    debug_timer = time.time()
+    # debug_timer = time.time()
     for _ in range(TIMES_TO_RUN):
         airports = pd.read_hdf(f'downloads/optimized_files/airports.h5', 'df')
         flights = STARTING_FLIGHTS.copy()
@@ -63,13 +63,13 @@ def vuelos():
         flights = flights.rename(columns={"country":"destination"})
 
     # print('merge airports', time.time()- debug_timer)
-    debug_timer = time.time()
+    # debug_timer = time.time()
     # read tickets  
     for _ in range(TIMES_TO_RUN):
         tickets = pd.read_hdf('downloads/optimized_files/tickets.h5','df')
 
     # print('read tickets', time.time()- debug_timer)
-    debug_timer = time.time()
+    # debug_timer = time.time()
     # read passengers
     for _ in range(TIMES_TO_RUN):
         passengers = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
@@ -90,7 +90,7 @@ def vuelos():
     flights = pd.merge(flights, tickets, on="flightNumber")
     # print('merge tickets', time.time()- debug_timer)
 
-    debug_timer = time.time()
+    # debug_timer = time.time()
     # total distance
     for _ in range(TIMES_TO_RUN):
         flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
@@ -98,7 +98,7 @@ def vuelos():
     # print('read distante', time.time()- debug_timer)
 
     STARTING_FLIGHTS = flights.copy()
-    debug_timer = time.time()
+    # debug_timer = time.time()
     for _ in range(TIMES_TO_RUN):
         flights = STARTING_FLIGHTS.copy()
         flights = flights.to_dict('records')
