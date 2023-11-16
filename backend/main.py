@@ -19,8 +19,9 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+@app.on_event("startup")
 @app.get("/download_files")
-def download_files_endpoint(background_tasks: BackgroundTasks):
+def download_files_endpoint():
     download_files()
     optimize_files()
     return {"message": "Files downloaded."}
