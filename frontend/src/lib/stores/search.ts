@@ -4,7 +4,8 @@ export const createSearchStore = (data: any) => {
     const { subscribe, set, update} = writable({
         data: data,
         filtered: data,
-        search: ''
+        search: '',
+        search2: '',
     })
 
     return {
@@ -14,9 +15,15 @@ export const createSearchStore = (data: any) => {
     }
 }
 
-export const searchHandler = (store: { search: string; filtered: any; data: any[] }) => {
-    const searchTerm = store.search.toLowerCase() || "";
+export const searchHandler = (store: { search: string; search2: string; filtered: any; data: any[] }) => {
+    
+    const searchTerm = (store.search?store.search:'').toLowerCase() || "";
     store.filtered = store.data.filter(item => {
-        return item.searchTerms.toLowerCase().includes(searchTerm)
+        return (item.searchTerms?item.searchTerms:'').toLowerCase().includes(searchTerm)
+    })
+    
+    const searchTerm2 = (store.search2?store.search2:'').toLowerCase() || "";
+    store.filtered = store.filtered.filter((item: { searchTerms2: string }) => {
+        return (item.searchTerms2?item.searchTerms2:'').toLowerCase().includes(searchTerm2)
     })
 }
