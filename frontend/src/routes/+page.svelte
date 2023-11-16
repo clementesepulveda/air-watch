@@ -6,12 +6,12 @@
   
   <Navbar />
   
-  <h1>Welcome to AirData Insights</h1>
+  <h1>Welcome to Air Watch Insights</h1>
   
   <div id="content">
 	<div class="container">
 	  <p>
-		Explore the fascinating world of aviation with AirData Insights, your go-to destination for comprehensive and visually engaging airline data. Whether you're an aviation enthusiast, a data analyst, or a curious traveler, our website offers a wealth of information, interactive graphs, and unique perspectives on air travel.
+		Explore the fascinating world of aviation with Air Watch Insights, your go-to destination for comprehensive and visually engaging airline data. Whether you're an aviation enthusiast, a data analyst, or a curious traveler, our website offers a wealth of information, interactive graphs, and unique perspectives on air travel.
 	  </p>
 	  <!-- <img src="https://cdn.britannica.com/02/215002-050-513175D0/American-actor-Danny-DeVito-2016.jpg" alt="danny devito" /> -->
 	</div>
