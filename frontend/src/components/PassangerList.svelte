@@ -273,15 +273,4 @@
         flex-direction: column;
         justify-content: center;
     }
-
-    input {
-        border: 0px;
-        width: 100%;
-        max-width: 50rem;
-        margin-bottom: 1rem;
-    }
-
-    
-    
-
 </style>

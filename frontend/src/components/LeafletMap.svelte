@@ -6,6 +6,8 @@
 	import PassangerList from './PassangerList.svelte';
     import { PUBLIC_BASE_URL } from '$env/static/public'
     import arrow from '$lib/assets/arrow.png'
+    import marker from '$lib/assets/marker.png'
+    import markerShadow from '$lib/assets/marker-shadow.png'
 
     export let flightNumber;
     let mapElement;
@@ -28,8 +30,17 @@
 
             leaflet.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png').addTo(map);
             
+            var markerIcon = L.icon({
+                iconUrl: marker,
+                shadowUrl: markerShadow,
+                iconSize: [50, 82],
+                iconAnchor: [12,38]
+            });
+
+            markerIcon.options.iconSize = markerIcon.options.iconSize.map(size => size * 0.5);
+            
             vuelo.airports.forEach(airport => {
-                leaflet.marker([airport.lat, airport.lon]).addTo(map)
+                leaflet.marker([airport.lat, airport.lon], {icon: markerIcon}).addTo(map)
                     .bindPopup(`Airport: ${airport.name}<br>City: ${airport.city}.<br>Country: ${airport.country}`)
             });
 
