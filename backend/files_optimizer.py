@@ -1,8 +1,8 @@
 import pandas as pd
 import json
 from datetime import datetime
-import yaml
 import json
+import os
 
 def spanish_to_english_date(d):
     mapping_dict = {
@@ -86,6 +86,9 @@ def optimize_files():
     aircrafts.to_json('downloads/aircrafts.json')
 
     # files to hdf
+    if 'downloads/optimized_files' and not os.path.isdir('downloads/optimized_files'):
+        os.makedirs('downloads/optimized_files')
+
     files = [
         "aircrafts",
         'flights',
@@ -97,29 +100,35 @@ def optimize_files():
 
     df = pd.read_csv(f'downloads/airports.csv')
     df.to_hdf('downloads/optimized_files/airports.h5','df')
-    df = pd.read_csv(f'downloads/tickets.csv')
-    df.to_hdf('downloads/optimized_files/tickets.h5','df')
-
-    # TICKETS PRECALC
-    print('precalculating tickets')
-    tickets = pd.read_csv('downloads//tickets.csv')
-    passengers = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
-    tickets['passengerID']=tickets['passengerID'].astype(int)
-    print(tickets.columns)
-    print(passengers.columns)
-    tickets = pd.merge(tickets,passengers, on="passengerID")
-    tickets = tickets.groupby('flightNumber')['age'].agg(['sum','count'])
-    tickets['averageAge'] = tickets['sum'] / tickets['count']
-    tickets = tickets.rename(columns={"count":"passengersQty"})
-    tickets = tickets.reset_index() 
+    tickets = pd.read_csv(f'downloads/tickets.csv')
     tickets.to_hdf('downloads/optimized_files/tickets.h5','df')
+
+    # Flight stats PRECALC
+    print('precalculating flight stats')
+    passengers = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
+    flights = pd.read_hdf('downloads/optimized_files/flights.h5', 'df')
+    tickets['passengerID']=tickets['passengerID'].astype(int)
+    tickets = pd.merge(tickets,passengers, on="passengerID")
+    stats = tickets.groupby('flightNumber')['age'].agg(['sum','count'])
+    stats['averageAge'] = stats['sum'] / stats['count']
+    stats = stats.rename(columns={"count":"passengersQty"})
+    stats = stats.reset_index() 
+
+    flights = pd.merge(flights, stats, on="flightNumber")
+    flights.to_hdf('downloads/optimized_files/flights.h5','df')
+
+    # stats.to_hdf('downloads/optimized_files/flight_stats.h5','df')
 
 
 if __name__ == "__main__":
     print('starting')
     optimize_files()
 
-    # aircrafts = pd.read_json('downloads/passengers.json')
-    # aircrafts.to_hdf('downloads/optimized_files/passengers.h5', key='df', mode='w')
-    # new_crafts = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
-    # print(new_crafts)
+    # tickets = pd.read_hdf('downloads/optimized_files/tickets.h5','df')
+    # print(tickets)
+    # print(tickets.columns)
+
+    # with open(f'downloads/tickets.csv') as f:
+    #     tickets = pd.read_csv(f)
+    # print(tickets)
+    # print(tickets.columns)

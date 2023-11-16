@@ -3,8 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import pandas as pd
 
-import time
-
 from downloader import download_files
 from files_optimizer import optimize_files
 
@@ -37,107 +35,45 @@ async def favicon():
 
 @app.get("/vuelos")
 def vuelos():
-    TIMES_TO_RUN = 1
-    total_time = time.time()
-    # debug_timer = time.time()
-    # read flights
-    for _ in range(TIMES_TO_RUN):
-        flights = pd.read_hdf('downloads/optimized_files/flights.h5', 'df')
+    flights = pd.read_hdf('downloads/optimized_files/flights.h5', 'df')
+    airports = pd.read_hdf(f'downloads/optimized_files/airports.h5', 'df')
+    aircrafts = pd.read_hdf(f'downloads/optimized_files/aircrafts.h5', 'df')
 
-    # print('read flights', time.time()- debug_timer)
-    # debug_timer = time.time()
-    # # read aircrafts
-    # STARTING_FLIGHTS = flights.copy()
-    for _ in range(TIMES_TO_RUN):
-        aircrafts = pd.read_hdf(f'downloads/optimized_files/aircrafts.h5','df')
-        flights = pd.concat([flights, aircrafts], axis=1, join="inner")
+    flights = pd.merge(flights, airports, left_on="originIATA", right_on="airportIATA")
+    flights = flights.rename(columns={"country":"origin"})
+    flights = pd.merge(flights, airports, left_on="destinationIATA", right_on="airportIATA")
+    flights = flights.rename(columns={"country":"destination"})
+
+    flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
+
+    flights = pd.merge(flights, aircrafts, on="aircraftID")
     
-    # print('read aircrafts', time.time()- debug_timer)
-    # debug_timer = time.time()
-    for _ in range(TIMES_TO_RUN):
-        airports = pd.read_hdf(f'downloads/optimized_files/airports.h5', 'df')
-        # flights = STARTING_FLIGHTS.copy()
-        flights = pd.merge(flights, airports, left_on="originIATA", right_on="airportIATA")
-        flights = flights.rename(columns={"country":"origin"})
-        flights = pd.merge(flights, airports, left_on="destinationIATA", right_on="airportIATA")
-        flights = flights.rename(columns={"country":"destination"})
-
-    # print('merge airports', time.time()- debug_timer)
-    # debug_timer = time.time()
-    # read tickets  
-    for _ in range(TIMES_TO_RUN):
-        tickets = pd.read_hdf('downloads/optimized_files/tickets.h5','df')
-
-    # print('read tickets', time.time()- debug_timer)
-    # debug_timer = time.time()
-    # read passengers
-    # for _ in range(TIMES_TO_RUN):
-    #     passengers = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
-        # passengers = pd.read_json(f'{APP_FOLDER}/downloads/passengers.json')
-
-    # print('read passengers.h5', time.time()- debug_timer)
-
-    # debug_timer = time.time()
-    # STARTING_PASS = tickets.copy()
-    # for _ in range(TIMES_TO_RUN):
-    #     tickets = STARTING_PASS.copy()
-    #     tickets = pd.merge(tickets,passengers, on="passengerID")
-    #     tickets = tickets.groupby('flightNumber')['age'].agg(['sum','count'])
-    #     tickets['averageAge'] = tickets['sum'] / tickets['count']
-    #     tickets = tickets.rename(columns={"count":"passengersQty"})
-    #     tickets = tickets.reset_index()
-        
-    flights = pd.merge(flights, tickets, on="flightNumber")
-    # print('merge tickets', time.time()- debug_timer)
-
-    # debug_timer = time.time()
-    # total distance
-    for _ in range(TIMES_TO_RUN):
-        flights['distance'] = ((flights['lat_x'] - flights['lat_y'])**2 + (flights['lon_x']-flights['lon_y'])**2)**(1/2)
-
-    # print('read distante', time.time()- debug_timer)
-
-    # STARTING_FLIGHTS = flights.copy()
-    debug_timer = time.time()
-    for _ in range(TIMES_TO_RUN):
-        # flights = STARTING_FLIGHTS.copy()
-        flights = flights.to_dict('records')
-    # print('flights to dict', time.time()- debug_timer)
-
-    print('TOTAL TIME', time.time() - total_time)
-    return flights
+    return flights.to_dict('records')
     
 
 @app.get("/vuelo/{flight_number}")
 def vuelo(flight_number: int):
-    # read flights
-    flights = pd.read_json('downloads/flights.json')
+    # read data
+    flights = pd.read_hdf('downloads/optimized_files/flights.h5', 'df')
+    tickets = pd.read_hdf('downloads/optimized_files/tickets.h5','df')
+    aircrafts = pd.read_hdf(f'downloads/optimized_files/aircrafts.h5','df')
+    airports = pd.read_hdf(f'downloads/optimized_files/airports.h5', 'df')
+    passengers = pd.read_hdf('downloads/optimized_files/passengers.h5')
+
     flight = flights[ flights["flightNumber"]==flight_number ]
+    tickets = tickets[ tickets['flightNumber'] == flight_number]
 
     # read aircrafts
-    # TODO, doesnt have root node
-    aircrafts = pd.read_xml(f'{APP_FOLDER}/downloads/aircrafts.xml')
     aircraft = pd.concat([flight, aircrafts], axis=1, join="inner")
-    aircraft = aircraft[ ['name','aircraftType']]
+    aircraft = aircraft[ ['aircraftName','aircraftType']]
 
     # read airports
-    # TODO, some lines have , in them. 
-    airports = pd.read_csv(f'{APP_FOLDER}/downloads/airports.csv', on_bad_lines='skip')
     airports = [
         pd.merge(flight, airports, left_on="originIATA", right_on="airportIATA"),
         pd.merge(flight, airports, left_on="destinationIATA", right_on="airportIATA")
     ]
     airports[0] = airports[0][ ['name','city','country','lat','lon']].to_dict('records')[0]
     airports[1] = airports[1][ ['name','city','country','lat','lon']].to_dict('records')[0]
-
-    # read tickets  
-    with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
-        tickets = pd.read_csv(f)
-        tickets['passengerID']=tickets['passengerID'].astype(int)
-        tickets = tickets[ tickets['flightNumber'] == flight_number]
-
-    # read passengers
-    passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
 
     passengers = pd.merge(tickets, passengers, on="passengerID")
     passengers = passengers[['passengerID','avatar','firstName','lastName','seatNumber','age','gender','weight(kg)','height(cm)']]
@@ -146,12 +82,14 @@ def vuelo(flight_number: int):
     passengers = passengers.to_dict('records')
     flight = flight[ ['flightNumber', 'airline'] ].to_dict('records')[0]
 
-    return {
+    ret =  {
         'flight': flight,
         'airports': airports,
         'aircraft': aircraft[0] if aircraft else {},
         'passengers': passengers,
     }
+    print(ret)
+    return ret
 
 @app.get("/temporal_data")
 def temporal_data(year: int = None, characteristics: str = ""):
@@ -227,19 +165,16 @@ def data_cantidad(year: int = None, flight_class: str = None):
 
 @app.get("/population_data")
 def data_poblacion(year: int = None):
-    # read flights
-    flights = pd.read_json('downloads/flights.json')
+    # read data
+    flights = pd.read_hdf('downloads/optimized_files/flights.h5', 'df')
+    tickets = pd.read_hdf('downloads/optimized_files/tickets.h5','df')
+    passengers = pd.read_hdf('downloads/optimized_files/passengers.h5')
+
     if year != None:
         flights = flights[flights['year'] == year]
 
-    # read tickets  
-    with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
-        tickets = pd.read_csv(f)
-            
     tickets = tickets[tickets['flightNumber'].isin(flights['flightNumber'])]
-
-    # read passengers
-    passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
+    
     passengers = passengers[passengers['passengerID'].isin(tickets['passengerID'])]
 
     all_age_values = pd.DataFrame({'age': range(1, 100)})
