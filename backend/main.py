@@ -50,7 +50,6 @@ def vuelos():
     
     return flights.to_dict('records')
     
-
 @app.get("/vuelo/{flight_number}")
 def vuelo(flight_number: int):
     # read data
@@ -174,7 +173,7 @@ def data_poblacion(year: int = None):
         flights = flights[flights['year'] == year]
 
     tickets = tickets[tickets['flightNumber'].isin(flights['flightNumber'])]
-    
+
     passengers = passengers[passengers['passengerID'].isin(tickets['passengerID'])]
 
     all_age_values = pd.DataFrame({'age': range(1, 100)})

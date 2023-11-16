@@ -117,8 +117,6 @@ def optimize_files():
     flights = pd.merge(flights, stats, on="flightNumber")
     flights.to_hdf('downloads/optimized_files/flights.h5','df')
 
-    # stats.to_hdf('downloads/optimized_files/flight_stats.h5','df')
-
 
 if __name__ == "__main__":
     print('starting')
