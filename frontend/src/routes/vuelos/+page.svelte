@@ -35,9 +35,11 @@
 
         const response = await fetch(PUBLIC_BASE_URL+"/vuelos");
         const vuelos = await response.json();
+        
         searchedFlights = vuelos.map( vuelo => ({
             ...vuelo,
-            searchTerms: `${vuelo.city_x} ${vuelo.destination} ${vuelo.city_y} ${vuelo.origin}`
+            searchTerms:  `${vuelo.city_y} ${vuelo.origin}`,
+            searchTerms2: `${vuelo.city_x} ${vuelo.destination}`
         }))
         searchStore = createSearchStore(searchedFlights);
         unsubscribe = searchStore.subscribe(model => searchHandler(model))
@@ -80,7 +82,6 @@
     }
 
     function change_page(dir) {
-        console.log(page)
         if (0 <= page + dir && page + dir < $searchStore.data.length / pagination) {
             page += dir
             document.body.scrollIntoView();
@@ -137,7 +138,8 @@
                 <SyncLoader color="#F8F8F8"/>
             </div>
         {:else}
-            <input type="search" placeholder="Search city" bind:value={$searchStore.search}>
+        <input type="search" placeholder="Search origin" bind:value={$searchStore.search}>
+        <input type="search" placeholder="Search destination" bind:value={$searchStore.search2}>
             <table>
                 <tr id="table-titles">
                     {#each titles as data}
@@ -265,8 +267,22 @@
         width: 100%;
         max-width: 50rem;
         margin-bottom: 1rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 5rem;
+        background-color: transparent;
+        color: white;
+        border: #888888 solid 1px;
     }
-    
+
+    ::placeholder {
+        color: #888888;
+        opacity: 1; /* Firefox */
+    }
+
+    ::-ms-input-placeholder { /* Edge 12 -18 */
+        color: #888888;
+    }
+        
     th:nth-child(0), td:nth-child(0) {
         min-width: 149px; /* Set a fixed width for the first column */
         max-width: 150px; /* Set a fixed width for the first column */
@@ -312,4 +328,5 @@
         max-width: 150px; /* Set a fixed width for the first column */
         word-wrap: break-word; /* Allow content to break within the max-width */
     }
+
 </style>
