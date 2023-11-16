@@ -25,6 +25,7 @@
 
         const option = {
             tooltip: {
+                confine: true,
                 trigger: 'item'
             },
             legend: {
