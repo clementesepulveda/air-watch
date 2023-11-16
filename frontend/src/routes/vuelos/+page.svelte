@@ -261,27 +261,6 @@
         flex-direction: column;
         justify-content: center;
     }
-
-    input {
-        border: 0px;
-        width: 100%;
-        max-width: 50rem;
-        margin-bottom: 1rem;
-        padding: 0.4rem 0.8rem;
-        border-radius: 5rem;
-        background-color: transparent;
-        color: white;
-        border: #888888 solid 1px;
-    }
-
-    ::placeholder {
-        color: #888888;
-        opacity: 1; /* Firefox */
-    }
-
-    ::-ms-input-placeholder { /* Edge 12 -18 */
-        color: #888888;
-    }
         
     th:nth-child(0), td:nth-child(0) {
         min-width: 149px; /* Set a fixed width for the first column */

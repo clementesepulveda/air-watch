@@ -17,10 +17,6 @@
     <button class="button-1"on:click={()=>option=1}>Flights</button>
     <button class="button-1"on:click={()=>option=2}>Airlines</button>
     <button class="button-1"on:click={()=>option=3}>Passengers</button>
-
-    <!-- <button on:click={()=>option=1}>Flights</button>
-    <button on:click={()=>option=2}>Airlines</button>
-    <button on:click={()=>option=3}>Passengers</button> -->
 </div>
 {#if option == 1}
     <TemporalGraph />

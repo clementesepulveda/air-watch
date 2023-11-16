@@ -4,6 +4,7 @@
     import { onMount } from 'svelte';
     import * as echarts from 'echarts';
     import { PUBLIC_BASE_URL } from '$env/static/public'
+	import { SyncLoader } from 'svelte-loading-spinners';
 
     let data = []
     let year = "";
@@ -98,7 +99,14 @@
                 </select>
             </div>
         </div>
-        <div id="graph" bind:this={chartDom}></div>
+
+
+        {#if loading}
+            <div class="spinner">
+                <SyncLoader color="#F8F8F8"/>
+            </div>
+        {/if}
+        <div id="graph" bind:this={chartDom} class:show={!loading}></div>
     </div>
 </main>
 
@@ -148,4 +156,19 @@
     }
     div#options label       { text-align:right; }
     div#options label:after { content: ":"; }
+    
+    .spinner {
+        display: grid;
+        place-items: center;
+        height: 100vh;
+        background-color: #100C2A;
+    }
+
+    #graph {
+        display: none; /* Initially hide the graph */
+    }
+
+    .show {
+        display: block !important; /* Show when the class is present */
+    }
 </style>

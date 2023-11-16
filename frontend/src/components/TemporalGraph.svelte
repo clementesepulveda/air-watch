@@ -4,6 +4,7 @@
     import { onMount } from 'svelte';
     import * as echarts from 'echarts';
     import { PUBLIC_BASE_URL } from '$env/static/public'
+	import { SyncLoader } from 'svelte-loading-spinners';
 
     let data = []
     let year = "";
@@ -56,7 +57,12 @@
                 data: data.map( item => item.value),
                 type: 'bar'
             }],
-            grid: {containLabel: true, left: 25, bottom: 30},
+            grid: {
+                containLabel: true,
+                left: 40,
+                right: 25,
+                bottom: 25
+            },
             tooltip: {
                 trigger: 'axis',
                 confine: true,
@@ -111,7 +117,12 @@
                 </select>
             </div>
         </div>
-        <div id="graph" bind:this={chartDom}></div>
+        {#if loading}
+            <div class="spinner">
+                <SyncLoader color="#F8F8F8"/>
+            </div>
+        {/if}
+        <div id="graph" bind:this={chartDom} class:show={!loading}></div>
     </div>
 </main>
 
@@ -161,4 +172,20 @@
     }
     div#options label       { text-align:right; }
     div#options label:after { content: ":"; }
+    
+    .spinner {
+        display: grid;
+        place-items: center;
+        height: 100vh;
+        flex-grow: 40;
+        background-color: #100C2A;
+    }
+
+    #graph {
+        display: none; /* Initially hide the graph */
+    }
+
+    .show {
+        display: block !important; /* Show when the class is present */
+    }
 </style>

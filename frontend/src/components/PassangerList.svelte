@@ -123,75 +123,67 @@
 
 <body>
     <div id='users' transition:fly={{ duration: 300, x: 100, easing: quintOut }}>
-        <h1>Passengers</h1>
-
         {#if !loading}
         
         
-<div id="table-container">
-    <div id="table">
-        <input type="search" placeholder="Search passenger" bind:value={$searchStore.search}>
-        <table>
-            <tr>
-                <th></th>
-                
-                {#each titles as data}
-                <th>
-                    <div id="table-header">
-                        <div id="table-title">{data.name}</div>
-                        <SortingIcon 
-                            onClickFunction={()=>sort_by(data.key)}
-                            bind:data={data}
-                        /> 
-                    </div>
-                </th>
-                {/each}
-            </tr>
-    
-            {#each $searchStore.filtered.slice(page*pagination, (page+1)*pagination) as passenger}
-            <tr>
-                <td id="img-container"><img src={passenger.avatar} alt="passanger"></td>
-                <td>{passenger.firstName} {passenger.lastName}</td>
-                <td>{passenger.seatNumber}</td>
-                <td>{passenger.age} years</td>
-                <td>{passenger.gender}</td>
-                <td>{passenger['weight(kg)']} kg</td>
-                <td>{passenger['height(cm)']} cm</td>
-            </tr>
-            {/each}
-        </table>
+            <div id="table">
+                <input type="search" placeholder="Search passenger" bind:value={$searchStore.search}>
+                <table>
+                    <tr>
+                        <th></th>
+                        
+                        {#each titles as data}
+                        <th>
+                            <div id="table-header">
+                                <div id="table-title">{data.name}</div>
+                                <SortingIcon 
+                                    onClickFunction={()=>sort_by(data.key)}
+                                    bind:data={data}
+                                /> 
+                            </div>
+                        </th>
+                        {/each}
+                    </tr>
             
-        <div class="pagination">
-            <!-- svelte-ignore a11y-invalid-attribute -->
-            <a href={page==0? "#/":"#"} on:click={()=>change_page(-1)}>&laquo;</a>
-            {#each pages as index}
-                <!-- svelte-ignore a11y-invalid-attribute -->
-                <a href={page==index? "#/":"#"} class={index==page ? "active" : ""} on:click={()=>change_to_page(index)}>{index+1}</a>
-            {/each}
-            <!-- svelte-ignore a11y-invalid-attribute -->
-            <a href="#"  on:click={()=>change_page(1)}>&raquo;</a>
-        </div>
-    </div>
-</div>
+                    {#each $searchStore.filtered.slice(page*pagination, (page+1)*pagination) as passenger}
+                    <tr>
+                        <td id="img-container"><img src={passenger.avatar} alt="passanger"></td>
+                        <td>{passenger.firstName} {passenger.lastName}</td>
+                        <td>{passenger.seatNumber}</td>
+                        <td>{passenger.age} years</td>
+                        <td>{passenger.gender}</td>
+                        <td>{passenger['weight(kg)']} kg</td>
+                        <td>{passenger['height(cm)']} cm</td>
+                    </tr>
+                    {/each}
+                </table>
+                    
+                <div class="pagination">
+                    <!-- svelte-ignore a11y-invalid-attribute -->
+                    <a href={page==0? "#/":"#"} on:click={()=>change_page(-1)}>&laquo;</a>
+                    {#each pages as index}
+                        <!-- svelte-ignore a11y-invalid-attribute -->
+                        <a href={page==index? "#/":"#"} class={index==page ? "active" : ""} on:click={()=>change_to_page(index)}>{index+1}</a>
+                    {/each}
+                    <!-- svelte-ignore a11y-invalid-attribute -->
+                    <a href="#"  on:click={()=>change_page(1)}>&raquo;</a>
+                </div>
+            </div>
         {/if}
     </div>
 </body>
 
 
 <style>
-    h1 {
-        text-align: center;
-    }
-
     #users {
         background-color: #303138; 
         border-radius: 10px;
 
         position: absolute;
         z-index: 9999;
-        right:10px;
-        max-width: 100%;
         overflow-x: hidden;
+        right: 11px;
+        max-width: calc(100% - 22px);
     }
 
     table {
@@ -205,14 +197,6 @@
 
     #img-container {
         width: 50px;
-    }
-
-    
-
-    #table-container {
-        display: flex;
-        justify-content: center;
-        padding: 2rem
     }
 
     #table {
