@@ -93,7 +93,7 @@
     }
 
     function updatePages() {
-        let maxNumber = $searchStore.data.length / pagination;
+        let maxNumber = $searchStore.filtered.length / pagination;
         let result = [];
 
         if (maxNumber <= pagination) {
@@ -118,6 +118,14 @@
         }
 
         pages = result;
+    }
+    
+
+    $: {
+        if ($searchStore && $searchStore.filtered) {
+            change_to_page(0);
+            updatePages();
+        }
     }
 </script>
 

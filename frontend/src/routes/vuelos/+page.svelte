@@ -10,7 +10,7 @@
     let searchedFlights = []
     let searchStore = null;
     let unsubscribe = null;
-
+    let filteredData = []
     let page = 0;
     let pagination = 15;
     let pages = []
@@ -82,12 +82,13 @@
     }
 
     function change_page(dir) {
-        if (0 <= page + dir && page + dir < $searchStore.data.length / pagination) {
+        if (0 <= page + dir && page + dir < $searchStore.filtered.length / pagination) {
             page += dir
             document.body.scrollIntoView();
             updatePages();
         }
     }
+
 
     function change_to_page(p) {
         if (p != page) {
@@ -98,15 +99,14 @@
     }
 
     function updatePages() {
-        let maxNumber = $searchStore.data.length / pagination;
-        let result = [];
+        let maxNumber = $searchStore.filtered.length / pagination;
+        pages = [];
 
         if (maxNumber <= pagination) {
             for (let i = 0; i < maxNumber; i++) {
-                result.push(i);
+                pages.push(i);
             }
-            pages = result;
-            return result;
+            return pages;
         }
 
         let start = Math.max(0, page - 2);
@@ -119,10 +119,18 @@
         }
 
         for (let i = start; i <= end; i++) {
-            result.push(i);
+            pages.push(i);
         }
 
-        pages = result;
+        return pages;
+    }
+
+    $: {
+        $searchStore
+        if ($searchStore && $searchStore.filtered) {
+            change_to_page(0);
+            updatePages();
+        }
     }
 
 </script>
