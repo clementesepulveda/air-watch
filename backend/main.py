@@ -123,12 +123,8 @@ def temporal_data(year: int = None, characteristics: str = ""):
 
         return flights.to_dict('records')
     else:
-        with open(f'{APP_FOLDER}/downloads/tickets.csv') as f:
-            tickets = pd.read_csv(f)
-            tickets['passengerID']=tickets['passengerID'].astype(int)
-
-        # read passengers
-        passengers = pd.read_csv(f'{APP_FOLDER}/downloads/passengers.csv')
+        tickets = pd.read_hdf('downloads/optimized_files/tickets.h5', 'df')
+        passengers = pd.read_hdf('downloads/optimized_files/passengers.h5', 'df')
 
         passengers = pd.merge(tickets,passengers, on="passengerID")
         flights = pd.merge(flights, passengers, on="flightNumber")
