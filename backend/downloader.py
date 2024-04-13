@@ -16,7 +16,9 @@ def download_cs_file(bucket_name, file_name, destination_file_name):
     return True
 
 def download_files():
-
+    if not os.path.exists('./private_key.json'):
+        return
+    
     # set key credentials file path
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = './private_key.json'
 
