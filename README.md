@@ -1,6 +1,12 @@
 # Air Watch
 
-Project made for the class IIC3103, Integration Workshop. Using mock data. 
+Project made for the class IIC3103, Integration Workshop. Using mock data. You can check out the deployment at:
+
+Frontend:
+- [https://air-watch.vercel.app/insights]()
+
+Backend:
+- [https://air-watch-api.onrender.com/]()
 
 ## Frontend
 
@@ -12,9 +18,6 @@ Utilized various technologies such as Echarts for creating graphs and Leaflet fo
 ```
 PUBLIC_BASE_URL="http://localhost:8000"
 ```
-### private_key.json
-
-Used for downloading the data from Google Cloud. 
 
 ### Instalation
 ```
@@ -25,10 +28,13 @@ Go to `http://localhost:5173`.
 
 ## Backend
 
-
 Built with FastAPI, the backend system handles data storage as files, optimizes them for improved usability, and provides an open endpoint for data retrieval.
 
 Although originally designed to download flight data, this functionality has been deprecated. The process involved downloading raw data initially, followed by optimization to reduce processing time significantly. Fetching unprocessed data could take several seconds or even minutes, whereas optimized data retrieval typically took only seconds. The chosen optimization format was h5 due to its superior performance compared to other formats such as JSON, YAML, CSV, and XML, determined through experimentation.
+
+### private_key.json
+
+Used for downloading the data from Google Cloud. 
 
 ### Instalation
 
