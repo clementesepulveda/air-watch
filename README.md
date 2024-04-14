@@ -3,10 +3,10 @@
 Project made for the class IIC3103, Integration Workshop. Using mock data. You can check out the deployment at:
 
 Frontend:
-- [https://air-watch.vercel.app/insights]()
+- https://air-watch.vercel.app/insights
 
 Backend:
-- [https://air-watch-api.onrender.com/]()
+- https://air-watch-api.onrender.com/
 
 ## Frontend
 
